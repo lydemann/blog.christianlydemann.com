@@ -17,7 +17,7 @@ hasCJKLanguage = true
 	enableRSS = false
 
 	# Disqus comment
-	disqusShortname = "your_disqus_short_name"
+	disqusShortname = "lydemann"
 	# Disable disqus comments by set `enableDisqus = "false"`
 	enableDisqus = true
 

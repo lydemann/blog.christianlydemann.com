@@ -1,0 +1,33 @@
+baseurl = "https://lydemann.com"
+DefaultContentLanguage = "en"
+title = "Christian Lüdemann's blog"
+theme = "beautifulhugo"
+metaDataFormat = "yaml"
+pygmentsUseClasses = true
+pygmentCodeFences = true
+#disqusShortname = "XXX"
+#googleAnalytics = "XXX"
+
+[Params]
+  subtitle = "Tech blog about Angular"
+  logo = "img/christian.jpg"
+  favicon = "img/favicon.ico"
+  dateFormat = "January 2, 2006"
+  commit = false
+  comments = true
+
+[Author]
+  name = "Christian Lüdemann"
+  website = "http://lydemann.com"
+  email = "christian@lydemann.com"
+  github = "lydemann"
+
+[[menu.main]]
+    name = "Blog"
+    url = ""
+    weight = 1
+
+[[menu.main]]
+    name = "About"
+    url = "about/"
+    weight = 2

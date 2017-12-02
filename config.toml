@@ -1,5 +1,5 @@
 # Site settings
-baseurl = "https://lydemann.comdad"
+baseurl = "https://lydemann.comd"
 # HTML Language Code Reference, such as en, zh-cn
 languageCode = "en"
 title = "Christian Lüdemann's blog"

@@ -1,0 +1,6 @@
+baseURL: http://blog.lydemann.com/
+disablePathToLower: true
+languageCode: en-us
+title: Christian Lüdemann's blog
+googleAnalytics: ""
+theme: "beautifulhugo"

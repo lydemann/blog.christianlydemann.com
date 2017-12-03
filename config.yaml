@@ -1,5 +1,6 @@
 baseurl: 'https://lydemann.github.io/blog.lydemann.com/'
 languageCode: en
+publishDir: docs
 title: Christian Lüdemann's blog
 theme: hugo-theme-cactus-plus
 googleAnalytics: your_google_analytics_code

@@ -1,5 +1,6 @@
 # Site settings
-baseurl = "https://lydemann.github.io"
+publishDir = "docs"
+baseurl = "https://lydemann.github.io/"
 # HTML Language Code Reference, such as en, zh-cn
 languageCode = "en"
 title = "Christian Lüdemann's blog"

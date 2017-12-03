@@ -3,8 +3,7 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>https://lydemann.github.io/about/</loc>
-    <lastmod>2015-06-20T14:02:37+02:00</lastmod>
+    <loc>https://lydemann.github.io/post/my-first-post/</loc>
   </url>
   
   <url>
@@ -14,6 +13,11 @@
   
   <url>
     <loc>https://lydemann.github.io/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://lydemann.github.io/post/</loc>
     <priority>0</priority>
   </url>
   

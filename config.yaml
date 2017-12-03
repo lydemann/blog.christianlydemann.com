@@ -1,4 +1,4 @@
-baseurl: 'https://lydemann.github.io/'
+baseurl: 'https://lydemann.github.io/blog.lydemann.com/'
 languageCode: en
 title: Christian Lüdemann's blog
 theme: hugo-theme-cactus-plus

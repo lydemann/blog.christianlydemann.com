@@ -12,10 +12,10 @@ params:
   twitter: your_twitter
   enableRSS: false
   disqusShortname: lydemann
-  enableDisqus: true
+  enableDisqus: false
   duoshuoShortname: your_duoshuo_short_name
   enableDuoshuo: false
-  enableGithubIssuesTips: true
+  enableGithubIssuesTips: false
   enableGoogleAnalytics: false
   enableBaiduAnalytics: false
   baiduAnalytics: your_baidu_tongji_code
@@ -23,9 +23,7 @@ params:
   customJS: []
   home: ''
   about: ''
-  archive: ''
-  subscribe: ''
-  tags: ''
+  archive: 'Posts'
   olderPosts: ''
   newerPosts: ''
   readMore: ''

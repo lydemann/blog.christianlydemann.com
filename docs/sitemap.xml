@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://lydemann.github.io/blog.lydemann.com/post/angular-production-build/</loc>
+    <lastmod>2017-12-26T17:45:58+01:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://lydemann.github.io/blog.lydemann.com/about/</loc>
   </url>
   
@@ -13,6 +18,13 @@
   
   <url>
     <loc>https://lydemann.github.io/blog.lydemann.com/</loc>
+    <lastmod>2017-12-26T17:45:58+01:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://lydemann.github.io/blog.lydemann.com/post/</loc>
+    <lastmod>2017-12-26T17:45:58+01:00</lastmod>
     <priority>0</priority>
   </url>
   

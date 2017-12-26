@@ -8,7 +8,7 @@ hasCJKLanguage: true
 params:
   name: Christian Lüdemann's blog
   description: Technical blog
-  bio: Blog biology
+  bio:
   twitter: your_twitter
   enableRSS: false
   disqusShortname: lydemann

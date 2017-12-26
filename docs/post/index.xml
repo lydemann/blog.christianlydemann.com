@@ -17,7 +17,7 @@
       <pubDate>Tue, 26 Dec 2017 17:45:58 +0100</pubDate>
       
       <guid>https://lydemann.github.io/blog.lydemann.com/post/angular-production-build/</guid>
-      <description>This is an overview of how to prepare an Angular app for production. There will be future posts going more in depth with the various steps described here. Note: Angular Cli is fortunately doing a lot of this out of the box, but it’s still valuable to know what it is doing in case you need to set this up without Angular CLI. When preparing an Angular app for production it is important to optimize it in the various areas:</description>
+      <description>This is an overview of how to prepare an Angular app for production. There will be future posts going more in depth with the various steps described here. Note: Angular CLI is fortunately doing a lot of this out of the box, but it’s still valuable to know what it is doing in case you need to set this up without Angular CLI. When preparing an Angular app for production it is important to optimize it in the various areas:</description>
     </item>
     
   </channel>

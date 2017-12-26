@@ -41,7 +41,7 @@
                     </h1>
                     <h2 class="headline">
                     Dec 26, 2017 17:45
-                    · 821 words
+                    · 822 words
                     · 4 minutes read
                       <span class="tags">
                       
@@ -52,7 +52,7 @@
                 <section id="post-body">
                     
 
-<p>This is an overview of how to prepare an Angular app for production. There will be future posts going more in depth with the various steps described here. Note: Angular Cli is fortunately doing a lot of this out of the box, but it’s still valuable to know what it is doing in case you need to set this up without Angular CLI.
+<p>This is an overview of how to prepare an Angular app for production. There will be future posts going more in depth with the various steps described here. Note: Angular CLI is fortunately doing a lot of this out of the box, but it’s still valuable to know what it is doing in case you need to set this up without Angular CLI.
 When preparing an Angular app for production it is important to optimize it in the various areas:</p>
 
 <ul>
@@ -107,9 +107,9 @@ When preparing an Angular app for production it is important to optimize it in t
 
 <p>Not all code in the different js libraries are being used. Removing unused code will reduce the bundle size. A technique for removing unused code is tree shaking in which a bundler only includes used code in a bundle and leaves everything else out of the bundle. Two popular tools for tree shaking are <a href="https://webpack.github.io/">Webpack</a> and <a href="https://rollupjs.org/">Rollup</a>. In short Webpack is, in my opinion, more suited for application bundling because of its plugin support for ts, js and scss/css transplication and bundling. Rollup is more used for Node module bundling. I am in my <a href="https://github.com/lydemann/Angular-4-Webpack-Starter">Angular starter repo</a> using Webpack for this reason and Angular CLI is also using Webpack.</p>
 
-<h5 id="seperation-of-bundles">Seperation of bundles</h5>
+<h5 id="separation-of-bundles">Separation of bundles</h5>
 
-<p>It is beneficial to seperate application, vendor and polyfills code in the bundles for easier error tracing and segregation of responsibilities in the bundles:</p>
+<p>It is beneficial to separate application, vendor and polyfills code in the bundles for easier error tracing and segregation of responsibilities in the bundles:</p>
 
 <ol>
 <li>The app bundle should contain only the application code</li>
@@ -117,7 +117,7 @@ When preparing an Angular app for production it is important to optimize it in t
 <li>The Polyfill bundle are files for actually running the app.<br /></li>
 </ol>
 
-<p>Im using CommonsChunkPlugin to seperate the bundles by simply registrering in the plugins section of a webpack config:</p>
+<p>Im using CommonsChunkPlugin to separate the bundles by simply registrering in the plugins section of a webpack config:</p>
 
 <pre><code class="language-javascript">plugins: [
     new webpack.optimize.CommonsChunkPlugin({
@@ -150,7 +150,7 @@ When preparing an Angular app for production it is important to optimize it in t
 <li><label><input type="checkbox" disabled class="task-list-item"> App is tree shaken with Webpack</label></li>
 <li><label><input type="checkbox" disabled class="task-list-item"> Code split in app, vendor and polyfills bundles</label></li>
 <li><label><input type="checkbox" disabled class="task-list-item"> Bundles are minified</label></li>
-<li><label><input type="checkbox" disabled class="task-list-item"> Bundles are compressed with gzip (preferable serverside)</label></li>
+<li><label><input type="checkbox" disabled class="task-list-item"> Bundles are compressed with gzip (preferable server side)</label></li>
 </ul>
 
 <h3 id="conclusion">Conclusion</h3>

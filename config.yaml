@@ -23,6 +23,7 @@ params:
   customJS: []
   home: ''
   about: ''
+  category: "Categories"
   archive: 'Posts'
   olderPosts: ''
   newerPosts: ''
@@ -31,7 +32,7 @@ params:
   aboutAuthor: I am so interesting.
   tweet: ''
   share: ''
-  title404: ''
+  title404: 'Page not found'
   subtitle404: ''
   iconFont: font-awesome
   socialIconStyle: ''

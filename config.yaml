@@ -1,4 +1,4 @@
-baseurl: 'https://lydemann.github.io/blog.lydemann.com/'
+baseurl: 'http://blog.christianlydemann.com/'
 languageCode: en
 publishDir: docs
 title: Christian Lüdemann's blog

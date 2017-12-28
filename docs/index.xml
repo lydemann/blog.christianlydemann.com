@@ -2,21 +2,21 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Christian Lüdemann&#39;s blog</title>
-    <link>https://lydemann.github.io/blog.lydemann.com/</link>
+    <link>http://blog.christianlydemann.com/</link>
     <description>Recent content on Christian Lüdemann&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <lastBuildDate>Tue, 26 Dec 2017 17:45:58 +0100</lastBuildDate>
     
-	<atom:link href="https://lydemann.github.io/blog.lydemann.com/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="http://blog.christianlydemann.com/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>Angular Production Build</title>
-      <link>https://lydemann.github.io/blog.lydemann.com/post/angular-production-build/</link>
+      <link>http://blog.christianlydemann.com/post/angular-production-build/</link>
       <pubDate>Tue, 26 Dec 2017 17:45:58 +0100</pubDate>
       
-      <guid>https://lydemann.github.io/blog.lydemann.com/post/angular-production-build/</guid>
+      <guid>http://blog.christianlydemann.com/post/angular-production-build/</guid>
       <description>This is an overview of how to prepare an Angular app for production. There will be future posts going more in depth with the various steps described here. Note: Angular CLI is fortunately doing a lot of this out of the box, but it’s still valuable to know what it is doing in case you need to set this up without Angular CLI. When preparing an Angular app for production it is important to optimize it in the various areas:</description>
     </item>
     

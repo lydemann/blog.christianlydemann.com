@@ -3,7 +3,7 @@ languageCode: en
 publishDir: docs
 title: Christian Lüdemann's blog
 theme: hugo-theme-cactus-plus
-googleAnalytics: your_google_analytics_code
+googleAnalytics: UA-54304486-2
 hasCJKLanguage: true
 params:
   name: Christian Lüdemann's blog
@@ -11,12 +11,12 @@ params:
   bio:
   twitter: your_twitter
   enableRSS: false
-  disqusShortname: lydemann
-  enableDisqus: false
+  disqusShortname: christianlydemann
+  enableDisqus: true
   duoshuoShortname: your_duoshuo_short_name
   enableDuoshuo: false
   enableGithubIssuesTips: false
-  enableGoogleAnalytics: false
+  enableGoogleAnalytics: true
   enableBaiduAnalytics: false
   baiduAnalytics: your_baidu_tongji_code
   customCSS: []
@@ -29,7 +29,7 @@ params:
   newerPosts: ''
   readMore: ''
   copyright: ''
-  aboutAuthor: I am so interesting.
+  aboutAuthor: ''
   tweet: ''
   share: ''
   title404: 'Page not found'

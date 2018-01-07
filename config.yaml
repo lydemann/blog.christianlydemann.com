@@ -11,7 +11,7 @@ params:
   bio:
   twitter: your_twitter
   enableRSS: false
-  disqusShortname: christianlydemann
+  disqusShortname: blog-christianlydemann-com
   enableDisqus: true
   duoshuoShortname: your_duoshuo_short_name
   enableDuoshuo: false

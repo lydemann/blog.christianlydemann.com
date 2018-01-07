@@ -1,6 +1,11 @@
 ---
 title: "Angular Production Build"
 date: 2017-12-26T17:45:58+01:00
+url: angular-production-build
+categories:
+- Angular
+tags:
+- Angular
 draft: false
 ---
 

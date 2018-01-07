@@ -6,9 +6,19 @@
     <description>Recent content in Tags on Christian Lüdemann&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
+    <lastBuildDate>Tue, 26 Dec 2017 17:45:58 +0100</lastBuildDate>
     
 	<atom:link href="http://blog.christianlydemann.com/tags/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Angular</title>
+      <link>http://blog.christianlydemann.com/tags/angular/</link>
+      <pubDate>Tue, 26 Dec 2017 17:45:58 +0100</pubDate>
+      
+      <guid>http://blog.christianlydemann.com/tags/angular/</guid>
+      <description></description>
+    </item>
     
   </channel>
 </rss>

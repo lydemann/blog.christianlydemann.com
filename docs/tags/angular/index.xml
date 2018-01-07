@@ -2,13 +2,13 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Angular on Christian Lüdemann&#39;s blog</title>
-    <link>http://blog.christianlydemann.com/categories/angular/</link>
+    <link>http://blog.christianlydemann.com/tags/angular/</link>
     <description>Recent content in Angular on Christian Lüdemann&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <lastBuildDate>Tue, 26 Dec 2017 17:45:58 +0100</lastBuildDate>
     
-	<atom:link href="http://blog.christianlydemann.com/categories/angular/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="http://blog.christianlydemann.com/tags/angular/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>

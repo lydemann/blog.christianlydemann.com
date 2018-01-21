@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>http://blog.christianlydemann.com/post/dynamic-form-rendering/</loc>
+    <lastmod>2018-01-07T17:38:54+01:00</lastmod>
+  </url>
+  
+  <url>
     <loc>http://blog.christianlydemann.com/post/angular-production-build/</loc>
     <lastmod>2017-12-26T17:45:58+01:00</lastmod>
   </url>
@@ -31,13 +36,13 @@
   
   <url>
     <loc>http://blog.christianlydemann.com/</loc>
-    <lastmod>2017-12-26T17:45:58+01:00</lastmod>
+    <lastmod>2018-01-07T17:38:54+01:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>http://blog.christianlydemann.com/post/</loc>
-    <lastmod>2017-12-26T17:45:58+01:00</lastmod>
+    <lastmod>2018-01-07T17:38:54+01:00</lastmod>
     <priority>0</priority>
   </url>
   

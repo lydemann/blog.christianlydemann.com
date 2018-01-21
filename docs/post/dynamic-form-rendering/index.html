@@ -1,0 +1,331 @@
+    <!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="author" content="Christian Lüdemann&#39;s blog">
+		<meta name="description" content="Technical blog">
+		<meta name="generator" content="Hugo 0.30.2" />
+		<title>Dynamic Form Rendering &middot; Christian Lüdemann&#39;s blog</title>
+		<link rel="shortcut icon" href="http://blog.christianlydemann.com/images/favicon.ico">
+		<link rel="stylesheet" href="http://blog.christianlydemann.com/css/style.css">
+		<link rel="stylesheet" href="http://blog.christianlydemann.com/css/highlight.css">
+		
+
+		
+		<link rel="stylesheet" href="http://blog.christianlydemann.com/css/font-awesome.min.css">
+		
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='http://blog.christianlydemann.com/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='http://blog.christianlydemann.com/post'>Posts</a>
+	<a href='http://blog.christianlydemann.com/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper">
+            <article class="post">
+                <header>
+                    <h1>
+                        Dynamic Form Rendering
+                    </h1>
+                    <h2 class="headline">
+                    Jan 7, 2018 17:38
+                    · 1268 words
+                    · 6 minutes read
+                      <span class="tags">
+                      
+                      </span>
+                    </h2>
+                </header>
+                
+                <section id="post-body">
+                    
+
+<p>A common need in enterprise application development is to support dynamically rendering of a form based on some domain specific metadata. This enables central control of domain logic and enables non-technical domain expert to control central domain logic that determines how the application is rendered, commonly using some CMS like GUI, presented in the domain language and used by the domain experts. Furthermore, it speeds up lead time of changes because the domain experts can implement changes themselves, working with a high level abstractions of the domain.</p>
+
+<h1 id="the-problem">The problem</h1>
+
+<p>I have worked on implementing such system for support dynamic rendering of a questionnaire, being generated based on metadata provided by domain experts through a central domain service. The architecture of the system was designed according best practises with domains contain micro services, each having a clear central responsibility. The service for providing the questionnaire data contained CRUD functionalities for the questionnaire and was designed with the language of the domain. The questionnaire domain area didn&rsquo;t deal with how the questionnaire actually got rendered by the service&rsquo;s clients but only represented the domain logic. Therefore some translation logic was needed to translate the provided questionnaire into a renderable questionnaire. The questionnaire service where responsible for specifying each hos each question:</p>
+
+<ul>
+<li>Answer type (how the question should be answered)</li>
+<li>Answer options (if any, what answer options should be available)</li>
+<li>Validation rules (how the question should be validated)</li>
+<li>Match criteria (when the question should be displayed)</li>
+</ul>
+
+<p>The model of the question could look like this:</p>
+
+<pre><code class="language-Javascript">
+export class Question&lt;T = any&gt; {
+
+    constructor() {
+        this.answerOptions = [];
+        this.matchCriterias = [];
+        this.validationRules = [];
+    }
+
+    externalQuestionId: string;
+    questionText: string;
+    helpText: string;
+    answerType: string;
+    answerOptions: AnswerOption[];
+    matchCriterias: MatchCriteria[];
+    validationRules: string[];
+    answer?: T;
+}
+</code></pre>
+
+<p>So after having discussed the model of the question, how should the form be rendered in the Angular app?</p>
+
+<h1 id="reactive-forms-vs-template-driven-forms">Reactive forms vs template driven forms</h1>
+
+<p>In brief, template driven forms is when the form is defined in the template using the ngForm directive and ngModel for databinding the form data to the bound models. This way form values and validators are set in the template using ngModel and validator directives. With reactive forms a FormGroup is provided using the FormGroup directive containing form state and validation rules, even though this can require more code and complexity, provides more flexibility as it can by code change form values and validators. Also reactive forms moves logic out of the template to the typescript code, making the application more testable.</p>
+
+<p>Rendering a form dynamically and needing to set validation rules dynamically is recommended to be implemented using reactive forms, as contrast to template driven forms, because:</p>
+
+<ul>
+<li>Reactive supports adding validation rules dynamically, whereas template driven forms hook up validation rules using directives, which can not be added dynamically (at least if you don&rsquo;t want to hack around, tried that - not good). This is needed when the form is getting rendered and the question&rsquo;s validators needs to be added to the form.</li>
+<li>Reactive forms will support better error handling because it is being mapped and generated in typescript code.</li>
+<li>Reactive forms will move the form and form mapping logic out of the templates and into encapsulated mapping code (or references to this).</li>
+<li>Reactive forms defines the form in typescript code, and not in the html template as template driven forms, which improves testability.</li>
+</ul>
+
+<h1 id="rendering-the-questionnaire">Rendering the questionnaire</h1>
+
+<p>Rendering the questionnaire consists of traversing the questionnaire&rsquo;s questions and applying the correct mapping of each question.</p>
+
+<h2 id="creating-the-form-group">Creating the form group</h2>
+
+<p>The logic for generating the form group is extracted in its own service. The service is responsible generate a form provided an array of questions.<br />
+This service for each question:\</p>
+
+<ul>
+<li>Mapping and setting the validators</li>
+<li>Mapping and setting the answer options as a form group</li>
+<li>Adding the FormGroup (if multianswer quesiton) or FormControl (if single answer question)</li>
+</ul>
+
+<pre><code class="language-Javascript">    export class QuestionFormGeneratorService {
+
+    constructor() { }
+    getQuestionsFormGroup(quesitons: Question[]): FormGroup {
+
+        const group: { [key: string]: AbstractControl } = {};
+        quesitons.forEach(question =&gt; {
+            const validatiors = this.getValidationFunctions(question.validationRules);
+
+            group[question.externalQuestionId] =
+                question.answerType.toUpperCase() === selectMulti ?
+                    new FormGroup(this.getAnswerOptionsControlsObj(question.answerOptions), validatiors) :
+                    new FormControl(question.answer || '', validatiors);
+        });
+        return new FormGroup(group);
+    }
+
+    private getAnswerOptionsControlsObj(answerOptions: AnswerOption[]) {
+        const group: { [key: string]: AbstractControl } = {};
+        answerOptions.forEach(answerOption =&gt; group[answerOption.optionCode]
+            = new FormControl());
+        return group;
+    }
+
+    private getValidationFunctions(validationRuleStrings: string[]): Array&lt;(control: AbstractControl) =&gt; ValidationErrors | null&gt; | null {
+
+        const validationRules = [];
+        for (const validationRuleStr of validationRuleStrings) {
+            const validationRule = ValidationRule.validationRulesMap.get(validationRuleStr.toUpperCase());
+            if (validationRule !== undefined) {
+                validationRules.push(validationRule.validationFn);
+            }
+        }
+
+        return validationRules.length &gt; 0 ? validationRules : null;
+    }
+}
+
+</code></pre>
+
+<p><a href="https://github.com/lydemann/questionnaire-render-demo/blob/master/src/app/questionnaire-section/question-form-generator.service.ts">QuestionFormGenerator.service.ts</a></p>
+
+<h3 id="validationrules-and-the-object-enum-pattern">ValidationRules and the object enum pattern</h3>
+
+<p>The applications validations rules are in the static map property:
+<code>ValidationRule.validationRulesMap</code>
+ValidationRule implements the &ldquo;object enum pattern&rdquo;, that is, a pattern for creating enums containing object. The validation-rules class looks like this:</p>
+
+<pre><code class="language-javascript">export class ValidationRule {
+
+private static _validationRulesMap: Map&lt;string, ValidationRule&gt;;
+public static get validationRulesMap() {
+    if (!ValidationRule._validationRulesMap) {
+        ValidationRule._validationRulesMap = new Map&lt;string, ValidationRule&gt;();
+    }
+
+    return ValidationRule._validationRulesMap;
+}
+
+public static required = new ValidationRule('REQUIRED', Validators.required);
+
+private constructor(private name: string, public validationFn: (control: AbstractControl) =&gt; ValidationErrors | null) {
+    ValidationRule.validationRulesMap.set(name, this);
+}
+
+toString() {
+    return this.name;
+}
+}
+</code></pre>
+
+<p>Pay attention to the private constructor making sure this class instances is only exposed through the static properties. Also every time a new static property is added it is automatically added to the validationRulesMap in the constructor.
+The toString method is used for getting the objects values as a string.</p>
+
+<h2 id="mapping-to-rendering-type-using-the-rules-pattern">Mapping to rendering type using the rules pattern</h2>
+
+<p>As mentioned before the questions don&rsquo;t contain any ui information, only question data such as answer type and answer options. To determine what ui component a question should be rendered as, some rules need to be defined for this mapping. The naive approach to this is to clutter a method with all kinds of conditional statements creating bad readability and messy design.<br />
+The goal here is to ensure satisfaction of the SOLID principles by separating the actual definition of rules from the actual rules logic, which will support extension of new rules without modifying existing functionality. Read more about the rules design pattern at Michael Whelan&rsquo;s <a href="http://www.michael-whelan.net/rules-design-pattern/">article</a>.</p>
+
+<pre><code class="language-javascript">
+@Injectable()
+export class RenderingTranslationService {
+
+    constructor() {
+    }
+
+    // Rendering rules goes here...
+    private renderingTranslationRules: RenderingTranslationRule[] = [
+        RenderingTranslationRule.freetextRenderingRule,
+        RenderingTranslationRule.radioRenderingRule,
+        RenderingTranslationRule.checkboxRenderingRule,
+        RenderingTranslationRule.comboboxRenderingRule
+    ];
+
+    getRenderingForQuestion(question: Question): Rendering {
+
+        let renderingToReturn;
+        for (const renderingTranslationRule of this.renderingTranslationRules) {
+            if (renderingTranslationRule.booleanExp(question)) {
+                renderingToReturn = renderingTranslationRule.rendering;
+                break;
+            }
+        }
+
+        if (!renderingToReturn) {
+            throw new Error('No renderings for question: ' + question.externalQuestionId);
+        }
+
+        return renderingToReturn;
+    }
+}
+
+</code></pre>
+
+<p>The rules are simply added to renderingTranslationRules array which contains a Boolean expression to determine if the rule is matched. These renderingTranslationsRules will be enumerated and extract the rendering from the RenderingTranslationRule, which first matches the rendering expression (again, enum object type). More rules can be added as long as they have a Rendering and booleanExp. Watch how the RenderingTranslationRules are implemented <a href="https://github.com/lydemann/questionnaire-render-demo/blob/master/src/app/question/rendering-translation.service.ts">here</a>.</p>
+
+<h2 id="showing-the-rendering-type">Showing the rendering type</h2>
+
+<p>Lastly, after the mapping is done, we now have a rendering type to show in the question template. The supported rendering types are <em>TEXTBOX</em>, <em>RADIO</em>, <em>COMBOBOX</em> and <em>CHECKBOX</em> and they are extracted using the above <em>getRenderingForQuestion</em> method. As the application scales, I would recommend to extract these rendering in separate presentation component for keeping the question template as slim as possible.</p>
+
+<p>The question html template can be viewed <a href="https://github.com/lydemann/questionnaire-render-demo/blob/master/src/app/question/question.component.html">here</a></p>
+
+<h1 id="putting-it-all-together">Putting it all together</h1>
+
+<p>There you have it. The questionnaire was rendered using these steps:</p>
+
+<ul>
+<li>Mapping the validationRules to the formGroup</li>
+<li>Creating the formGroup using the mapped validationRules and questionnaire</li>
+<li>Mapping the ui rendering rules from the questionnaire domain data</li>
+<li>Showing the right question rendering in the question template using a switch</li>
+</ul>
+
+<p>The complete solution can be found  my github <a href="https://github.com/lydemann/questionnaire-render-demo">here</a></p>
+
+                </section>
+            </article>
+
+            
+
+            
+                
+                    <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'blog-christianlydemann-com'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+                
+            
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+
+	
+	
+    <a class="symbol" href="https://github.com/lydemann">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Christian Lüdemann&#39;s blog
+    
+    </p>
+    <p class="small">
+    </p>
+</footer>
+
+        </section>
+
+        <script src="http://blog.christianlydemann.com/js/jquery-2.2.4.min.js"></script>
+<script src="http://blog.christianlydemann.com/js/main.js"></script>
+<script src="http://blog.christianlydemann.com/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-54304486-2', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+
+
+    </body>
+</html>

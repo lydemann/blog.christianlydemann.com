@@ -13,7 +13,7 @@ I have worked on implementing such system for support dynamic rendering of a que
 * Answer type (how should the question be answered)
 * Answer options (if any, what answer options should be available)
 * Validation rules (how should the question be validated)
-* Match criterias (when should the question be displayed)
+* Enable criteria (when should the question be displayed)
 
 The model of the question could look like this:
 ```Javascript
@@ -22,7 +22,7 @@ export class Question<T = any> {
 
     constructor() {
         this.answerOptions = [];
-        this.matchCriterias = [];
+        this.enableCriteria = [];
         this.validationRules = [];
     }
 
@@ -31,7 +31,7 @@ export class Question<T = any> {
     helpText: string;
     answerType: string;
     answerOptions: AnswerOption[];
-    matchCriterias: MatchCriteria[];
+    enableCriteria: enableCriteria[];
     validationRules: string[];
     answer?: T;
 }

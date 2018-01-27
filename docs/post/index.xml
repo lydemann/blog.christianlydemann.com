@@ -6,10 +6,19 @@
     <description>Recent content in Posts on Christian Lüdemann&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Tue, 26 Dec 2017 17:45:58 +0100</lastBuildDate>
+    <lastBuildDate>Sun, 07 Jan 2018 17:38:54 +0100</lastBuildDate>
     
 	<atom:link href="http://blog.christianlydemann.com/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Dynamic Form Rendering</title>
+      <link>http://blog.christianlydemann.com/post/dynamic-form-rendering/</link>
+      <pubDate>Sun, 07 Jan 2018 17:38:54 +0100</pubDate>
+      
+      <guid>http://blog.christianlydemann.com/post/dynamic-form-rendering/</guid>
+      <description>A common need in enterprise application development is to support dynamically rendering of a form based on some domain specific metadata. This enables central control of domain logic and enables non-technical domain expert to control central domain logic that determines how the application is rendered, commonly using some CMS like GUI, presented in the domain language and used by the domain experts. Furthermore, it speeds up lead time of changes because the domain experts can implement changes themselves, working with a high level abstractions of the domain.</description>
+    </item>
     
     <item>
       <title>Angular Production Build</title>

@@ -1,16 +1,16 @@
----
+﻿---
 title: "Dynamic Form Rendering"
 date: 2018-01-07T17:38:54+01:00
-draft: true
+draft: false
 ---
 
-A common need in enterprise application development is to support dynamically rendering of a form based on some domain specific metadata. This enables central control of domain logic and enables non-technical domain expert to determine how the application is rendered, commonly using some CMS like GUI presented in the domain language. Furthermore it speeds up lead time of changes because the domain persons can implement changes themselves working with a high level abstractions of the domain.
+A common need in enterprise application development is to support dynamically rendering of a form based on some domain specific metadata. This enables central control of domain logic and enables non-technical domain expert to control central domain logic that determines how the application is rendered, commonly using some CMS like GUI, presented in the domain language and used by the domain experts. Furthermore, it speeds up lead time of changes because the domain experts can implement changes themselves, working with a high level abstractions of the domain.
 
 # The problem
 
-I have worked on implementing such system for support dynamic rendering of a questionnaire, being generated based on metadata provided by domain experts through a central domain service. The architecture of the system was designed according best practises with domains contain micro services, each having a clear central responsibility. The service for providing the quesitonnaire data had contained CRUD functionalities for the questionnaire and was designed with language of it's users. These were strictly domain experts and shouldn't deal with how the questionnaire actually got rendered by the service's clients. Some translation logic was needed to translate the provided questionnaire into a renderable questionnaire. The questionnaire service where responsible for specifying each hos each question:
-
-* Answer type (how should the question be answered)
+I have worked on implementing such system for support dynamic rendering of a questionnaire, being generated based on metadata provided by domain experts through a central domain service. The architecture of the system was designed according best practises with domains contain micro services, each having a clear central responsibility. The service for providing the questionnaire data contained CRUD functionalities for the questionnaire and was designed with the language of the domain. The questionnaire domain area didn't deal with how the questionnaire actually got rendered by the service's clients but only represented the domain logic. Therefore some translation logic was needed to translate the provided questionnaire into a renderable questionnaire. The questionnaire service where responsible for specifying each hos each question:
+ 
+* Answer type (how the question should be answered)
 * Answer options (if any, what answer options should be available)
 * Validation rules (how should the question be validated)
 * Enable criteria (when should the question be displayed)
@@ -41,21 +41,21 @@ So after having discussed the model of the question, how should the form be rend
 
 # Reactive forms vs template driven forms
 
-In breif, template driven forms is when the form is defined in the template using the ngForm directive and ngModel for databinding the form data to the bound models. This way form values and validators are set in the template using ngModel and validator directives. With reactive forms a FormGroup is provided using the FormGroup directive containing form state and validation rules, even trough this can require more code and complexity, provides more flexibility as it can by code change form values and validators. Also reactive forms moves logic out of the template to the typescript code, making the application more testable.
+In brief, template driven forms is when the form is defined in the template using the ngForm directive and ngModel for databinding the form data to the bound models. This way form values and validators are set in the template using ngModel and validator directives. With reactive forms a FormGroup is provided using the FormGroup directive containing form state and validation rules, even though this can require more code and complexity, provides more flexibility as it can by code change form values and validators. Also reactive forms moves logic out of the template to the typescript code, making the application more testable.
 
 Rendering a form dynamically and needing to set validation rules dynamically is recommended to be implemented using reactive forms, as contrast to template driven forms, because:
 
-* Reactive supports adding validation rules dynamically, whereas template driven forms hook up validation rules using directives, which can not be added dynamically (at least if you don’t want to hack around). This is needed when the form is getting rendered and the question's validators needs to be added to the form.
+* Reactive supports adding validation rules dynamically, whereas template driven forms hook up validation rules using directives, which can not be added dynamically (at least if you don't want to hack around, tried that - not good). This is needed when the form is getting rendered and the question's validators needs to be added to the form.
 * Reactive forms will support better error handling because it is being mapped and generated in typescript code.
 * Reactive forms will move the form and form mapping logic out of the templates and into encapsulated mapping code (or references to this).
-* Reactive forms defines the form in typescript code, and not in the html template as template driven forms, which will make the form logic more testable.
+* Reactive forms defines the form in typescript code, and not in the html template as template driven forms, which improves testability.
 
 # Rendering the questionnaire
 
-Rendering the questionnaire consists of traversing the questionnair's questions and applying the correct mapping of each question.
+Rendering the questionnaire consists of traversing the questionnaire's questions and applying the correct mapping of each question.
 
 ## Creating the form group
-To keep the business logic of the presentation layer the logic for generating the form is extracted in it's own service. The service is responsible generate a form provided an array of questions.\\
+The logic for generating the form group is extracted in its own service. The service is responsible generate a form provided an array of questions.\\
 This service for each question:\\
 
 * Mapping and setting the validators
@@ -138,8 +138,8 @@ The toString method is used for getting the objects values as a string.
 
 ## Mapping to rendering type using the rules pattern
 
-As mentioned before the questions doesn't contain any ui information, only question data such as answer type and answer options. To determine what ui component a question should be rendered as some rules need to be defined for this mapping. The naive approach to this is to clutter a method with all kinds of conditional statements creating bad readability and messy design.\\
-The goal here is to ensure satisfaction of the SOLID principles by seperating the actual defining of rules with the actual rules logic, which will support extension of new rules with modifying existing functionality. Read more about the rules design pattern at Michael Whelan's [article](http://www.michael-whelan.net/rules-design-pattern/).
+As mentioned before the questions don't contain any ui information, only question data such as answer type and answer options. To determine what ui component a question should be rendered as, some rules need to be defined for this mapping. The naive approach to this is to clutter a method with all kinds of conditional statements creating bad readability and messy design.\\
+The goal here is to ensure satisfaction of the SOLID principles by separating the actual definition of rules from the actual rules logic, which will support extension of new rules without modifying existing functionality. Read more about the rules design pattern at Michael Whelan's [article](http://www.michael-whelan.net/rules-design-pattern/).
 
 ```javascript
 
@@ -177,12 +177,12 @@ export class RenderingTranslationService {
 
 ```
 
-The rules are simply added to renderingTranslationRules array which be enumerated and extract the rendering from the RenderingTranslationRule, which first matches the rendering expression (again, enum object type). More rules can be added as long as they have a Rendering and booleanExp. Watch how the RenderingTranslationRules are implemented [here](https://github.com/lydemann/questionnaire-render-demo/blob/master/src/app/question/rendering-translation.service.ts).
+The rules are simply added to renderingTranslationRules array which contains a Boolean expression to determine if the rule is matched. These renderingTranslationsRules will be enumerated and extract the rendering from the RenderingTranslationRule, which first matches the rendering expression (again, enum object type). More rules can be added as long as they have a Rendering and booleanExp. Watch how the RenderingTranslationRules are implemented [here](https://github.com/lydemann/questionnaire-render-demo/blob/master/src/app/question/rendering-translation.service.ts).
 
 
 ## Showing the rendering type
 
-Lastly, after the mapping is done, we now have a rendering type to show in question template. The supported rendering types are *TEXTBOX*, *RADIO*, *COMBOBOX* and *CHECKBOX* and they are extracted using the above *getRenderingForQuestion* method. As the application scales, I would recommend to extract these rendering in seperate presentation component for keeping the question template as slim as possible.
+Lastly, after the mapping is done, we now have a rendering type to show in the question template. The supported rendering types are *TEXTBOX*, *RADIO*, *COMBOBOX* and *CHECKBOX* and they are extracted using the above *getRenderingForQuestion* method. As the application scales, I would recommend to extract these rendering in separate presentation component for keeping the question template as slim as possible.
 
 The question html template can be viewed [here](https://github.com/lydemann/questionnaire-render-demo/blob/master/src/app/question/question.component.html)
 
@@ -192,8 +192,8 @@ There you have it. The questionnaire was rendered using these steps:
 
 * Mapping the validationRules to the formGroup
 * Creating the formGroup using the mapped validationRules and questionnaire
-* Mapping the ui rendering rules from the question
+* Mapping the ui rendering rules from the questionnaire domain data
 * Showing the right question rendering in the question template using a switch
 
 
-The complete solution can be found at my github [here](https://github.com/lydemann/questionnaire-render-demo)
+The complete solution can be found  my github [here](https://github.com/lydemann/questionnaire-render-demo)

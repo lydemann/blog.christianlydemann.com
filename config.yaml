@@ -1,4 +1,4 @@
-baseurl: 'http://blog.christianlydemann.com/'
+baseurl: 'http://christianlydemann.com/'
 languageCode: en
 publishDir: docs
 title: Christian Lüdemann's blog

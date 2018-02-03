@@ -26,7 +26,7 @@ With Docker it is much easier to get an application running, when we simply need
 
 #### Containers vs VMs
 
-Running containers in Docker differ from VMs being able to share a lot of the host systems ressources, like networking and kernel, wheras VMs are more isolated in this manner, containering verything within the VM. Because containers share alot of the host systems ressources, containers can be much smaller than VMs and startup in a fraction of the time.
+Running containers in Docker differ from VMs being able to share the host system's ressources, like networking and kernel, whereas VMs are isolated, containering everything. Because containers share alot of the host systems ressources, containers can be much smaller than VMs and startup in a fraction of the time.
 
 
 ### The Angular app

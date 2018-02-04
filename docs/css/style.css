@@ -274,8 +274,11 @@ li {
     list-style-position: inside;
 }
 
-ul>li {
-    list-style-type: circle;
+ul > li {
+    list-style-type: disc;
+}
+ul.task-list > li {
+    list-style-type: none;
 }
 
 

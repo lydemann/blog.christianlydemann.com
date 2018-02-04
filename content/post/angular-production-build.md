@@ -34,16 +34,18 @@ The application is more secure because less code is being eval'ed at runtime usi
  
 #### Setting up AoT in Webpack:
 AoT can be set up in webpack using [@ngtools/webpack]( https://github.com/angular/angular-cli/tree/master/packages/%40ngtools/webpack) AotPlugin, which is part os Angular CLI:
-```Javascript
-      new AotPlugin({
-            "mainPath": "main.ts",
-            "hostReplacementPaths": {
-              "environments\\environment.ts": !isProd ? "environments\\environment.ts" : "environments\\environment.prod.ts"
-            },
-            "exclude": [],
-            "tsConfigPath": "src\\tsconfig.app.json",
-            "skipCodeGeneration": !isProd
-          })
+
+**webpack.config.js**
+```javascript
+new AotPlugin({
+    "mainPath": "main.ts",
+    "hostReplacementPaths": {
+        "environments\\environment.ts": !isProd ? "environments\\environment.ts" : "environments\\environment.prod.ts"
+    },
+    "exclude": [],
+    "tsConfigPath": "src\\tsconfig.app.json",
+    "skipCodeGeneration": !isProd
+})
 
 ```
 The skipCodeGeneration option will determine whether the js bundle should be Aot compiled.

@@ -17,7 +17,6 @@ I have worked on implementing such system for support dynamic rendering of a que
 
 The model of the question could look like this:
 ```Javascript
-
 export class Question<T = any> {
 
     constructor() {
@@ -63,7 +62,7 @@ This service for each question:\\
 * Adding the FormGroup (if multianswer quesiton) or FormControl (if single answer question)
 
 ```Javascript
-    export class QuestionFormGeneratorService {
+export class QuestionFormGeneratorService {
 
     constructor() { }
     getQuestionsFormGroup(quesitons: Question[]): FormGroup {

@@ -67,8 +67,7 @@
 
 <p>The model of the question could look like this:</p>
 
-<pre><code class="language-Javascript">
-export class Question&lt;T = any&gt; {
+<pre><code class="language-Javascript">export class Question&lt;T = any&gt; {
 
     constructor() {
         this.answerOptions = [];
@@ -117,7 +116,7 @@ This service for each question:\</p>
 <li>Adding the FormGroup (if multianswer quesiton) or FormControl (if single answer question)</li>
 </ul>
 
-<pre><code class="language-Javascript">    export class QuestionFormGeneratorService {
+<pre><code class="language-Javascript">export class QuestionFormGeneratorService {
 
     constructor() { }
     getQuestionsFormGroup(quesitons: Question[]): FormGroup {

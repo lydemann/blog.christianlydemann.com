@@ -41,7 +41,7 @@
                     </h1>
                     <h2 class="headline">
                     Dec 26, 2017 17:45
-                    · 822 words
+                    · 823 words
                     · 4 minutes read
                       <span class="tags">
                       
@@ -91,15 +91,17 @@ When preparing an Angular app for production it is important to optimize it in t
 
 <p>AoT can be set up in webpack using <a href="https://github.com/angular/angular-cli/tree/master/packages/%40ngtools/webpack">@ngtools/webpack</a> AotPlugin, which is part os Angular CLI:</p>
 
-<pre><code class="language-Javascript">      new AotPlugin({
-            &quot;mainPath&quot;: &quot;main.ts&quot;,
-            &quot;hostReplacementPaths&quot;: {
-              &quot;environments\\environment.ts&quot;: !isProd ? &quot;environments\\environment.ts&quot; : &quot;environments\\environment.prod.ts&quot;
-            },
-            &quot;exclude&quot;: [],
-            &quot;tsConfigPath&quot;: &quot;src\\tsconfig.app.json&quot;,
-            &quot;skipCodeGeneration&quot;: !isProd
-          })
+<p><strong>webpack.config.js</strong></p>
+
+<pre><code class="language-javascript">new AotPlugin({
+    &quot;mainPath&quot;: &quot;main.ts&quot;,
+    &quot;hostReplacementPaths&quot;: {
+        &quot;environments\\environment.ts&quot;: !isProd ? &quot;environments\\environment.ts&quot; : &quot;environments\\environment.prod.ts&quot;
+    },
+    &quot;exclude&quot;: [],
+    &quot;tsConfigPath&quot;: &quot;src\\tsconfig.app.json&quot;,
+    &quot;skipCodeGeneration&quot;: !isProd
+})
 
 </code></pre>
 

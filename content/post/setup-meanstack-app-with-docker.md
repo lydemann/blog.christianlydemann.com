@@ -206,7 +206,7 @@ npm-debug.log
 ```
 
 We then create DOCKERFILE in the server directory and type:
-```
+```javascript
 FROM node:carbon as builder
 
 # Create app directory
@@ -238,13 +238,26 @@ CMD [ "npm", "start" ]
 The above Docker file, is in contrast to the Angular DOCKERFILE, a multi step build, making the image smaller by running the image with an Alpine OS.
 In the first build step the *builder* copies the package.json and package-lock.json into the container and then installs npm dependencies. Step 2 is created from an carbon-alpine image, for smaller image size, and is copying the builder content to the final container. The image is exposed on 8080 and uses NPM start as default cmd.
 
+We can build the image with:
+```docker build -t meanserver:1.0 .```
+And run the image with:
+```docker run meanserver:1.0```
 
 ### MongoDB
 
+We can run mongoDB from the official "mongo" image with:
+```docker run -p 27017:27017 mongo```
+
+Now we have a mean stack app running!
 
 ### Connecting the parts and running with docker-compose
 
+Instead of type docker commands manually we can use docker-compose to preconfigure our docker build and run commands for running multiple containers on same host.
+
 #### Connecting client and server
+
+
+
 #### Connecting server and database
 
 Now you should have folders that looks like this:

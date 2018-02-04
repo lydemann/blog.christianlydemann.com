@@ -29,7 +29,7 @@ With Docker it is much easier to get an application running, when we simply need
 
 Running containers in Docker differ from VMs being able to share the host system's ressources, like networking and kernel, whereas VMs are isolated, containering everything. Because containers share alot of the host systems ressources, containers can be much smaller than VMs and startup in a fraction of the time.
 
-![VM vs Containers](http://images\setup-meanstack-app-with-docker.jpg)
+![VM vs Containers](/images/setup-meanstack-app-with-docker/vm-vs-container.jpg)
 
 
 ## Setting up the application parts
@@ -43,7 +43,7 @@ Before we start coding we need to have some basic stuff installed:
 - Your favorite IDE (For this, mine is VS Code
 
 
-Let’s get started!
+Letï¿½s get started!
 
 
 ### The Angular app
@@ -52,12 +52,12 @@ Let’s get started!
 We will start by creating the Angular 5 application.
 Luckily, Angular cli makes it easy to scaffold a new Angular app, so we will first make sure we have that installed:
 
-``` npm i –g @angular/cli ```
+``` npm i ï¿½g @angular/cli ```
 
 
 You then generate a new Angular app with:
 ``` ng new client ```
-This will create a new folder called client, containing a simple “hello world” Angular app. So long so good.
+This will create a new folder called client, containing a simple ï¿½hello worldï¿½ Angular app. So long so good.
 
 
 To make sure everything is working, open terminal inside the client directory and run:
@@ -65,17 +65,17 @@ To make sure everything is working, open terminal inside the client directory an
 
 You should now see this:
 
-![Ng app start](http://images\ng-app-start.PNG)
+![Ng app start](/images/setup-meanstack-app-with-docker/ng-app-start.PNG)
 
-Now we know it works natively. Let’s start Dockerizing it.
+Now we know it works natively. Letï¿½s start Dockerizing it.
 
 #### Dockerizing the Angular app
 
-Our goal now is to get the Angular app running in a Docker container. To make the Angular app accessible from outside the Docker container we need to tell it to run on 0.0.0.0 instead of localhost by going to “package.json” in the client folder and change the start script to:
+Our goal now is to get the Angular app running in a Docker container. To make the Angular app accessible from outside the Docker container we need to tell it to run on 0.0.0.0 instead of localhost by going to ï¿½package.jsonï¿½ in the client folder and change the start script to:
 
 ``` "start": "ng serve -H 0.0.0.0",```
 
-Before we start writing the Dockerfile we create a .dockerignore file to ensure that we don’t copy unwanted files to our image:
+Before we start writing the Dockerfile we create a .dockerignore file to ensure that we donï¿½t copy unwanted files to our image:
 
 1. Create .docker inside the client folder
 2. Add node_modules and npm-debug.log as this:
@@ -85,14 +85,14 @@ node_modules
 npm-debug.log
 ```
 
-For setting this up we create a new file inside the “client” folder called: “DOCKERFILE”.Below is shown a DOCKERFILE that is based on Node Carbon (Node version 8) that installs the npm modules and run using the npm start script:
+For setting this up we create a new file inside the ï¿½clientï¿½ folder called: ï¿½DOCKERFILEï¿½.Below is shown a DOCKERFILE that is based on Node Carbon (Node version 8) that installs the npm modules and run using the npm start script:
 
 1. FROM node:carbon: Base image on Node carbon, giving access to npm and node.
-2. WORKDIR: Setting the working directory inside the container, making it possible to copy files to the working dir just using “.”
+2. WORKDIR: Setting the working directory inside the container, making it possible to copy files to the working dir just using ï¿½.ï¿½
 3. COPY package*.json .: Copying package.json and package-lock.json to the working directory inside the image
 4. RUN npm i: Runs npm install at the working directory
-5. Copy all from current directory (if not in “.dockerignore” file) to working directory
-6. EXPOSE 4200: Showing that the app is to be exposed on port 4200 (but only actually exposed on port 4200 if specify this to the running container using the –p parameter.
+5. Copy all from current directory (if not in ï¿½.dockerignoreï¿½ file) to working directory
+6. EXPOSE 4200: Showing that the app is to be exposed on port 4200 (but only actually exposed on port 4200 if specify this to the running container using the ï¿½p parameter.
 7. CMD: Specifying that the default command should be npm start, if other cmd is not specified when running the image as a container. 
 
 
@@ -125,12 +125,12 @@ CMD [ "npm", "start" ]
 ```
 
 Now we can build the image with:
-``` docker build –t meanstackapp:1.0 . ```
-Where –t specifies a tag for the build (meanstackapp is the image name and 1.0 is the tag), so the container can be better identified.
-We specify “.” Because this will look for a file called “DOCKERFILE” at the current directory in the terminal.
+``` docker build ï¿½t meanstackapp:1.0 . ```
+Where ï¿½t specifies a tag for the build (meanstackapp is the image name and 1.0 is the tag), so the container can be better identified.
+We specify ï¿½.ï¿½ Because this will look for a file called ï¿½DOCKERFILEï¿½ at the current directory in the terminal.
 
 After that we can run the image with:
-``` docker run –p 4200:4200 meanstackapp:1.0 ``` and we should see our app running just like before.
+``` docker run ï¿½p 4200:4200 meanstackapp:1.0 ``` and we should see our app running just like before.
 
 
 ### The Node app
@@ -140,7 +140,7 @@ The Node app acts as the api in this setup.
 We start by:
 
 - Creating a new folder called server
-- Add a package.json file using “npm init”
+- Add a package.json file using ï¿½npm initï¿½
 - Add a file called index.js that contains a basic express setup:
 
 ``` const express = require('express');
@@ -174,7 +174,7 @@ app.listen(config.port, () => console.log(`Example app listening on ${config.por
 
 ```
 
-We also create a routes.js file for api endpoints containing a simple “hello world” endpoint:
+We also create a routes.js file for api endpoints containing a simple ï¿½hello worldï¿½ endpoint:
 ```
 const path = require('path');
 const express = require('express');
@@ -199,6 +199,7 @@ And run the application using npm start. We should now be able to request the he
 #### Dockerizing the Node server
 
 As in the Angular app we open terminal at the server directory and start by creating a .dockerignore file containing:
+
 ```
 node_modules
 npm-debug.log
@@ -235,7 +236,7 @@ CMD [ "npm", "start" ]
 ```
 
 The above Docker file, is in contrast to the Angular DOCKERFILE, a multi step build, making the image smaller by running the image with an Alpine OS.
-In the first build step the “builder” copies the package.json and package-lock.json into the container and then installs npm dependencies. Step 2 is created from an carbon-alpine image, for smaller image size, and is copying the builder content to the final container. The image is exposed on 8080 and uses NPM start as default cmd.
+In the first build step the builder copies the package.json and package-lock.json into the container and then installs npm dependencies. Step 2 is created from an carbon-alpine image, for smaller image size, and is copying the builder content to the final container. The image is exposed on 8080 and uses NPM start as default cmd.
 
 
 ### MongoDB
@@ -247,7 +248,7 @@ In the first build step the “builder” copies the package.json and package-lock.j
 #### Connecting server and database
 
 Now you should have folders that looks like this:
-![MEAN stack folders](http://images\mean-stack-folders.PNG)
+![MEAN stack folders](/images/setup-meanstack-app-with-docker/mean-stack-folders.PNG)
 
 
 ### Conclusion

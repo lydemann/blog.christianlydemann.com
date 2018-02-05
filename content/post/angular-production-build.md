@@ -1,5 +1,5 @@
 ---
-title: "Angular Production Build"
+title: "Getting Angular Application Ready for Production"
 date: 2017-12-26T17:45:58+01:00
 categories:
 - Angular

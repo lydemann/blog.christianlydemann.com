@@ -17,7 +17,7 @@
       <pubDate>Sun, 28 Jan 2018 18:55:41 +0100</pubDate>
       
       <guid>http://blog.christianlydemann.com/post/setup-meanstack-app-with-docker/</guid>
-      <description>This post is about creating a MEAN stack app consisting of Angular 5, MongoDB, NodeJS and Express, running in Docker. It is based on a Github demo I created, which can be viewed here.
+      <description>This post is about creating a MEAN stack app consisting of Angular 5, MongoDB, NodeJS and Express, running in Docker. It is based on a Github demo I created, which can be found here.
 Docker overview Docker is used for running applications in containers making them contain everything needed for running the application: runtimes, system tools, libraries, OS and everything you would otherwise need to install yourself to run the application.</description>
     </item>
     

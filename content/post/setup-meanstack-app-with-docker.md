@@ -4,7 +4,7 @@ date: 2018-01-28T18:55:41+01:00
 draft: false
 ---
 
-This post is about creating a MEAN stack app consisting of Angular 5, MongoDB, NodeJS and Express, running in Docker. It is based on a Github demo I created, which can be viewed [here](https://github.com/lydemann/docker-meanstack-demo).
+This post is about creating a MEAN stack app consisting of Angular 5, MongoDB, NodeJS and Express, running in Docker. It is based on a Github demo I created, which can be found [here](https://github.com/lydemann/docker-meanstack-demo).
 
 
 ## Docker overview

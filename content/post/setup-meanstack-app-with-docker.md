@@ -388,6 +388,6 @@ We should now see our complete MEAN stack application running on localhost:80 (A
 
 ## Conclusion
 
-In this guide we saw how to setup a simple MEAN stack app and run it all by creating Docker images from DOCKERFILES and build and run them with docker-compose.\\
+In this guide we saw how to setup a simple MEAN stack app and run it all by creating Docker images from DOCKERFILEs and build and run them with docker-compose.\\
 For easier development, you might also look into creating a dev docker-compose.yml, where you are mounting local files for enabling automatic reload of application on code change, without needing to to install local dependencies, like Node.
 A complete demo can be found on my Github [here](https://github.com/lydemann/docker-meanstack-demo).

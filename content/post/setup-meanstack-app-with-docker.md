@@ -1,25 +1,25 @@
 ---
-title: "Setup MEAN stack Application with Docker"
+title: "Creating a MEAN stack Application with Docker"
 date: 2018-01-28T18:55:41+01:00
-draft: true
+draft: false
 ---
 
 This post is about creating a MEAN stack app consisting of Angular 5, MongoDB, NodeJS and Express, running in Docker. It is based on a Github demo I created, which can be viewed [here](https://github.com/lydemann/docker-meanstack-demo).
 
 
-### Docker overview
+## Docker overview
 
 Docker is used for running applications in containers making them contain everything needed for running the application: runtimes, system tools, libraries, OS and everything you would otherwise need to install yourself to run the application.
 
 
-#### Containers vs VMs
+### Containers vs VMs
 
 Running containers in Docker differ from VMs by being able to share the host system's ressources, like networking and kernel, whereas VMs are isolated (with HyperV), containing everything inside its own guest OS. Because containers can share the host systems ressources, containers can be much smaller than VMs and startup in a fraction of the time.
 
 ![VM vs Containers](/images/setup-meanstack-app-with-docker/vm-vs-container.jpg)
 
 
-##### Docker concepts:
+### Docker concepts:
 
 * Images: A read only specification of how a container should be created, that can be instantiated as a container.
 * Containers: Container are instantiated images that contain all dependencies, runtime as well as libraries, for running the application.
@@ -27,7 +27,7 @@ Running containers in Docker differ from VMs by being able to share the host sys
 * Docker-engine: The engine providing the Docker containerization technology.
 * Docker-compose: A file specifying how images should be build and run and runs on top of the “docker build” and “docker run” commands for setting up multiple containers on the same machine, eg. an image for the client application, one for server and one for database.
 
-#### Benefits of Docker over traditional approaches:
+### Benefits of Docker over traditional approaches:
 
 With Docker it is easy to get an application running on different environments, because we can simply build our application as images and run these images as containers on machines with Docker installed. These eases the developer from a lot of the hassle with manually setting up environments and manage dependencies.
 
@@ -235,7 +235,7 @@ We can run mongoDB from the official "mongo" image with:
 
 With all the parts set up, let's start connecting them.
 
-### Connecting the parts and running with docker-compose
+## Connecting the parts
 
 Now you should have a project tree that looks like this:
 ```
@@ -298,7 +298,7 @@ Now you should have a project tree that looks like this:
 
 We now need to connect the client with the server and connect the server to the MongoDB.
 
-#### Connecting client and server
+### Connecting client and server
 
 We connect the client and the server by creating a property called *apiUrl* inside the *environment.ts* file, like this:
 
@@ -312,8 +312,9 @@ export const environment = {
 };
 ```
 
+This is used as a base url for the http calls, like here:
 
-This is used as a base url for the http calls:
+**[app.service.ts](https://github.com/lydemann/docker-meanstack-demo/blob/master/client/src/app/app.service.ts)**
 ```javascript
 public callHello() {
   return this.http.get(environment.apiUrl + 'hello')
@@ -321,7 +322,6 @@ public callHello() {
     .toPromise();
 }
 ```
-
 
 The ApiUrl can also be overridden using Node environment variables, because it will check if *API_URL* is set in Node environment variables (process.env) or fallback to localhost:8080.
 
@@ -386,7 +386,7 @@ Now we can build and run it by opening command line from the project root and ty
 
 We should now see our complete MEAN stack application running on localhost:80 (Angular app) and localhost:8080 (Node server).
 
-### Conclusion
+## Conclusion
 
 In this guide we saw how to setup a simple MEAN stack app and run it all by creating Docker images from DOCKERFILES and build and run them with docker-compose.\\
 For easier development, you might also look into creating a dev docker-compose.yml, where you are mounting local files for enabling automatic reload of application on code change, without needing to to install local dependencies, like Node.

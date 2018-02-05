@@ -1,0 +1,523 @@
+    <!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="author" content="Christian Lüdemann&#39;s blog">
+		<meta name="description" content="Technical blog">
+		<meta name="generator" content="Hugo 0.30.2" />
+		<title>Creating a MEAN stack Application with Docker &middot; Christian Lüdemann&#39;s blog</title>
+		<link rel="shortcut icon" href="http://blog.christianlydemann.com/images/favicon.ico">
+		<link rel="stylesheet" href="http://blog.christianlydemann.com/css/style.css">
+		<link rel="stylesheet" href="http://blog.christianlydemann.com/css/highlight.css">
+		
+
+		
+		<link rel="stylesheet" href="http://blog.christianlydemann.com/css/font-awesome.min.css">
+		
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='http://blog.christianlydemann.com/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='http://blog.christianlydemann.com/post'>Posts</a>
+	<a href='http://blog.christianlydemann.com/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper">
+            <article class="post">
+                <header>
+                    <h1>
+                        Creating a MEAN stack Application with Docker
+                    </h1>
+                    <h2 class="headline">
+                    Jan 28, 2018 18:55
+                    · 1984 words
+                    · 10 minutes read
+                      <span class="tags">
+                      
+                      </span>
+                    </h2>
+                </header>
+                
+                <section id="post-body">
+                    
+
+<p>This post is about creating a MEAN stack app consisting of Angular 5, MongoDB, NodeJS and Express, running in Docker. It is based on a Github demo I created, which can be viewed <a href="https://github.com/lydemann/docker-meanstack-demo">here</a>.</p>
+
+<h2 id="docker-overview">Docker overview</h2>
+
+<p>Docker is used for running applications in containers making them contain everything needed for running the application: runtimes, system tools, libraries, OS and everything you would otherwise need to install yourself to run the application.</p>
+
+<h3 id="containers-vs-vms">Containers vs VMs</h3>
+
+<p>Running containers in Docker differ from VMs by being able to share the host system&rsquo;s ressources, like networking and kernel, whereas VMs are isolated (with HyperV), containing everything inside its own guest OS. Because containers can share the host systems ressources, containers can be much smaller than VMs and startup in a fraction of the time.</p>
+
+<p><img src="/images/setup-meanstack-app-with-docker/vm-vs-container.jpg" alt="VM vs Containers" /></p>
+
+<h3 id="docker-concepts">Docker concepts:</h3>
+
+<ul>
+<li>Images: A read only specification of how a container should be created, that can be instantiated as a container.</li>
+<li>Containers: Container are instantiated images that contain all dependencies, runtime as well as libraries, for running the application.</li>
+<li>DOCKERFILE: A file used for building docker images, specifying dependencies and configuration for the image and how the image should be run. This file is read when running the &ldquo;docker build&rdquo; and &ldquo;docker run&rdquo; commands.</li>
+<li>Docker-engine: The engine providing the Docker containerization technology.</li>
+<li>Docker-compose: A file specifying how images should be build and run and runs on top of the “docker build” and “docker run” commands for setting up multiple containers on the same machine, eg. an image for the client application, one for server and one for database.</li>
+</ul>
+
+<h3 id="benefits-of-docker-over-traditional-approaches">Benefits of Docker over traditional approaches:</h3>
+
+<p>With Docker it is easy to get an application running on different environments, because we can simply build our application as images and run these images as containers on machines with Docker installed. These eases the developer from a lot of the hassle with manually setting up environments and manage dependencies.</p>
+
+<h2 id="setting-up-the-application-parts">Setting up the application parts</h2>
+
+<p>We will now, one by one, setup the different parts of the application and Dockerize them, by creating a Docker image for each part using DOCKERFILEs. This way we can later compose the mean stack app using the different images in a docker-compose.yml.</p>
+
+<p>Before we start coding, we need to have some basic dependencies installed:</p>
+
+<ul>
+<li>NodeJS, which can be installed from <a href="https://nodejs.org/">https://nodejs.org/</a> (Just go for stable version)</li>
+<li>Docker: <a href="https://docs.docker.com/install">https://docs.docker.com/install/</a></li>
+<li>Your favorite IDE (For this, mine is VS Code)</li>
+</ul>
+
+<p>Let&rsquo;s get started!</p>
+
+<h3 id="the-angular-app">The Angular app</h3>
+
+<p>We will start by creating the Angular 5 application.
+Luckily, Angular cli makes it easy to scaffold a new Angular app, so we will first make sure we have that installed:</p>
+
+<p><code>npm i -g @angular/cli</code></p>
+
+<p>You then generate a new Angular app with:
+<code>ng new client</code>
+This will create a new Angular app in a folder called client, containing a simple &ldquo;hello world&rdquo; Angular app. So long so good.</p>
+
+<p>To make sure everything is working, open terminal inside the client directory and run:
+<code>npm start</code></p>
+
+<p>You should now see this:</p>
+
+<p><img src="/images/setup-meanstack-app-with-docker/ng-app-start.PNG" alt="Ng app start" /></p>
+
+<p>Now we know it works natively. Let&rsquo;s start Dockerizing it.</p>
+
+<h4 id="dockerizing-the-angular-application">Dockerizing the Angular application</h4>
+
+<p>Our goal now is to get the Angular application running in a Docker container. To make the Angular app accessible from outside the Docker container we need to tell it to run on 0.0.0.0 instead of localhost by going to &ldquo;package.json&rdquo; in the client folder and change the start script to:</p>
+
+<p><code>&quot;start&quot;: &quot;ng serve -H 0.0.0.0&quot;,</code></p>
+
+<p>Before we start writing the Dockerfile, we create a .dockerignore file to ensure that we don&rsquo;t copy unwanted files to our image:</p>
+
+<ol>
+<li>Create .docker inside the client folder</li>
+<li>Add node_modules and npm-debug.log as this:</li>
+</ol>
+
+<p><strong>client/.dockerignore</strong></p>
+
+<pre><code>node_modules
+npm-debug.log
+</code></pre>
+
+<p>For setting this up we create a new file inside the <em>client</em> folder called <em>DOCKERFILE</em>. Below is shown a DOCKERFILE that is based on Node Carbon (Node version 8), that installs the npm modules and run using the npm start script:</p>
+
+<p><strong>client/DOCKERFILE</strong></p>
+
+<pre><code>FROM node:carbon
+
+WORKDIR /usr/src/app
+
+# Install app dependencies
+# A wildcard is used to ensure both package.json AND package-lock.json are copied
+# where available (npm@5+)
+COPY package*.json .
+
+# Install any needed packages
+RUN npm i
+
+# Bundle app source
+COPY . .
+
+EXPOSE 4200
+
+CMD [ &quot;npm&quot;, &quot;start&quot; ]
+</code></pre>
+
+<ol>
+<li>FROM node:carbon: Base image on Node carbon, giving access to npm and node.</li>
+<li>WORKDIR: Setting the working directory inside the container, making it possible to reference this directory with &ldquo;.&rdquo;</li>
+<li>COPY package*.json .: Copying package.json and package-lock.json to the working directory inside the image</li>
+<li>RUN npm i: Runs npm install at the working directory</li>
+<li>Copy all from current directory (if not in <em>.dockerignore</em> file) to working directory</li>
+<li>EXPOSE 4200: Showing that the app is to be exposed on port 4200 (but only actually exposed on port 4200 if we specify this in the “docker run” command using the -p parameter).</li>
+<li>CMD: Specifying that the default command should be npm start. This can be overridden, if wanted, by specifying another command in “docker run”.</li>
+</ol>
+
+<p>Now we can open a terminal inside the client folder and build the image with:</p>
+
+<p><code>docker build -t meanstackapp:1.0 .</code></p>
+
+<p>-t specifies a name and a tag for the build (meanstackapp is the name and 1.0 is the tag).
+We specify &ldquo;.&rdquo; because this will look for a file called <em>DOCKERFILE</em> at the current directory (client) in the terminal.</p>
+
+<p>We hereafter run the image with:
+<code>docker run -p 4200:4200 meanstackapp:1.0</code>
+and we should see our app running just like before.</p>
+
+<h3 id="the-node-application">The Node application</h3>
+
+<p>The Node application acts as the api in this MEAN stack application.</p>
+
+<p>We start by:</p>
+
+<ul>
+<li>Creating a new folder called server</li>
+<li>Add a package.json file using <em>npm init</em></li>
+<li>Add a file called index.js that contains a basic express setup:</li>
+</ul>
+
+<p><strong>server/index.js</strong></p>
+
+<pre><code>const express = require('express');
+const config = require('./config');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+const app = express();
+
+// Parsers for POST data
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+
+// Cross Origin middleware
+app.use(function(req, res, next) {
+ res.header(&quot;Access-Control-Allow-Origin&quot;, &quot;*&quot;)
+ res.header(&quot;Access-Control-Allow-Headers&quot;, &quot;Origin, X-Requested-With, Content-Type, Accept&quot;)
+ next()
+})
+
+require('./routes')(app);
+
+app.listen(config.port, () =&gt; console.log(`Example app listening on ${config.port}!`))
+</code></pre>
+
+<p>We also create a routes.js file for api endpoints containing a simple &ldquo;hello world&rdquo; endpoint:</p>
+
+<p><strong>server/routes.js</strong></p>
+
+<pre><code class="language-javascript">const express = require('express');
+
+exports = module.exports = function(app) {
+
+    app.get('/hello', (req, res) =&gt; res.send('Hello World!'))
+}
+</code></pre>
+
+<p>We create a npm start script as:
+<code>&quot;start&quot;: &quot;node index.js&quot;,</code></p>
+
+<p>and run the application using <em>npm start</em>. We should now be able to request the hello endpoint at <a href="http://localhost:8080/hello">http://localhost:8080/hello</a>.</p>
+
+<h4 id="dockerizing-the-node-server">Dockerizing the Node server</h4>
+
+<p>As in the Angular app, we open the terminal at the server directory and start by creating a .dockerignore file:</p>
+
+<p><strong>server/.dockerignore</strong></p>
+
+<pre><code>node_modules
+npm-debug.log
+</code></pre>
+
+<p>We then create DOCKERFILE in the server directory:</p>
+
+<p><strong>server/DOCKERFILE</strong></p>
+
+<pre><code class="language-javascript">FROM node:carbon as builder
+
+# Create app directory
+WORKDIR /usr/src/app
+
+# Install app dependencies
+# A wildcard is used to ensure both package.json AND package-lock.json are copied
+# where available (npm@5+)
+COPY package*.json ./
+
+# Install any needed packages
+RUN npm install
+
+# Bundle app source
+COPY . .
+
+# Stage 2 build for creating smaller image
+FROM node:carbon-alpine
+WORKDIR /usr/src/app
+
+COPY --from=builder /usr/src/app .
+
+EXPOSE 8080
+
+CMD [ &quot;npm&quot;, &quot;start&quot; ]
+</code></pre>
+
+<p>The above DOCKERIFLE is, in contrast to the Angular DOCKERFILE, a multi step build, making the image smaller by running the image with an Alpine OS.<br />
+In the first build step the <em>builder</em> copies the package.json and package-lock.json into the container and then installs npm dependencies. Step 2 is created from an carbon-alpine image, for smaller image size, and is copying the builder content to the final container. The image is exposed on 8080 and uses NPM start as default cmd.<br />
+Note: For production build this image can be smaller by using a javascript bundler that supports tree shaking, like Rollup and Webpack.</p>
+
+<p>We can build the image with:<br />
+<code>docker build -t meanserver:1.0 .</code><br />
+and run the image with:<br />
+<code>docker run -p 8080:8080 meanserver:1.0</code></p>
+
+<h3 id="mongodb">MongoDB</h3>
+
+<p>We can run mongoDB from the official &ldquo;mongo&rdquo; image with:
+<code>docker run -p 27017:27017 mongo</code></p>
+
+<p>With all the parts set up, let&rsquo;s start connecting them.</p>
+
+<h2 id="connecting-the-parts">Connecting the parts</h2>
+
+<p>Now you should have a project tree that looks like this:</p>
+
+<pre><code>├───client
+│   │   .angular-cli.json
+│   │   .dockerignore
+│   │   .editorconfig
+│   │   .gitignore
+│   │   DOCKERFILE
+│   │   karma.conf.js
+│   │   package-lock.json
+│   │   package.json
+│   │   protractor.conf.js
+│   │   README.md
+│   │   tsconfig.json
+│   │   tslint.json
+│   │
+│   ├───e2e
+│   │       app.e2e-spec.ts
+│   │       app.po.ts
+│   │       tsconfig.e2e.json
+│   │
+│   └───src
+│       │   favicon.ico
+│       │   index.html
+│       │   main.ts
+│       │   polyfills.ts
+│       │   styles.sass
+│       │   test.ts
+│       │   tsconfig.app.json
+│       │   tsconfig.spec.json
+│       │   typings.d.ts
+│       │
+│       ├───app
+│       │       app.component.html
+│       │       app.component.sass
+│       │       app.component.spec.ts
+│       │       app.component.ts
+│       │       app.module.ts
+│       │       app.service.spec.ts
+│       │       app.service.ts
+│       │
+│       ├───assets
+│       │       .gitkeep
+│       │
+│       └───environments
+│               environment.prod.ts
+│               environment.ts
+│
+└───server
+        .dockerignore
+        .gitignore
+        config.js
+        DOCKERFILE
+        index.js
+        package-lock.json
+        package.json
+        routes.js
+</code></pre>
+
+<p>We now need to connect the client with the server and connect the server to the MongoDB.</p>
+
+<h3 id="connecting-client-and-server">Connecting client and server</h3>
+
+<p>We connect the client and the server by creating a property called <em>apiUrl</em> inside the <em>environment.ts</em> file, like this:</p>
+
+<p><strong>client/environment..ts</strong></p>
+
+<pre><code class="language-javascript">import { } from 'node';
+
+export const environment = {
+ production: false,
+ apiUrl: process.env.API_URL || 'http://127.0.0.1:8080'
+};
+</code></pre>
+
+<p>This is used as a base url for the http calls, like here:</p>
+
+<p><strong><a href="https://github.com/lydemann/docker-meanstack-demo/blob/master/client/src/app/app.service.ts">app.service.ts</a></strong></p>
+
+<pre><code class="language-javascript">public callHello() {
+  return this.http.get(environment.apiUrl + 'hello')
+    .map(resp =&gt; resp.json())
+    .toPromise();
+}
+</code></pre>
+
+<p>The ApiUrl can also be overridden using Node environment variables, because it will check if <em>API_URL</em> is set in Node environment variables (process.env) or fallback to localhost:8080.</p>
+
+<h4 id="connecting-server-and-database">Connecting server and database</h4>
+
+<p>An easy way for the Node server to interact with the Mongo database is using an ODM and here we use <em>Mongoose</em>.
+Mongoose is installed by opening the command line at the Node server and run:
+<code>npm i —save mongoose</code><br />
+On the Node server in the index.js file we connect to Mongo:</p>
+
+<p><strong><a href="https://github.com/lydemann/docker-meanstack-demo/blob/master/server/index.js">server/index.js</a></strong></p>
+
+<pre><code class="language-javascript">// Connect to MongoDB
+console.log('Connection to mongoDb on uri: ' + config.mongo.uri);
+mongoose.connect(config.mongo.uri, config.mongo.options);
+mongoose.connection.on('error', function(err) {
+ console.error('MongoDB connection error: ' + err);
+});
+</code></pre>
+
+<h4 id="running-the-complete-app-with-docker-compose">Running the complete app with Docker Compose</h4>
+
+<p>Now that all the parts are setup we specify how the different images should be build and run using docker-compose. We create a docker-compose file containing a service for the angular app, the node server and the Mongo DB like this:</p>
+
+<p><strong>docker-compose.yml</strong></p>
+
+<pre><code>version: '3' # specify docker-compose version
+
+# Define the services/containers to be run
+services:
+ client:
+   build: ./client
+   ports:
+     - &quot;80:4200&quot;
+ server: # name of the first service
+   build: ./server # specify the directory of the Dockerfile
+   ports:
+     - &quot;8080:8080&quot;
+   environment:
+     - MONGO_URL=mongodb://database/mean-app
+   links:
+     - database
+   depends_on:
+     - database
+ database: # name of the third service
+   image: mongo # specify image to build container from
+   volumes:
+     - &quot;/data/db:/data/db&quot;
+   ports:
+     - &quot;27017:27017&quot; # specify port forewarding
+</code></pre>
+
+<p>This docker-compose file is specifying a service for client, server and database:\</p>
+
+<ul>
+<li>Client: We specify the DOCKERFILE for build as client/DOCKERFILE and map it&rsquo;s port from 4200 to 80 on the host.<br /></li>
+<li>Server: We specify the DOCKERFILE for build as server/DOCKERFILE and map it&rsquo;s port from 8080 to 8080 on the host. Also links and depends_on is used for linking the database to the server.<br /></li>
+<li>Database: The image mongo is used here and volumes for the database are mapped from the container to the host and exposing the container at port 27017 on the host.</li>
+</ul>
+
+<p>Now we can build and run it by opening command line from the project root and type:<br />
+<code>docker-compose up</code>`</p>
+
+<p>We should now see our complete MEAN stack application running on localhost:80 (Angular app) and localhost:8080 (Node server).</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>In this guide we saw how to setup a simple MEAN stack app and run it all by creating Docker images from DOCKERFILES and build and run them with docker-compose.<br />
+For easier development, you might also look into creating a dev docker-compose.yml, where you are mounting local files for enabling automatic reload of application on code change, without needing to to install local dependencies, like Node.
+A complete demo can be found on my Github <a href="https://github.com/lydemann/docker-meanstack-demo">here</a>.</p>
+
+                </section>
+            </article>
+
+            
+
+            
+                
+                    <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'blog-christianlydemann-com'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+                
+            
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+
+	
+	
+    <a class="symbol" href="https://github.com/lydemann">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Christian Lüdemann&#39;s blog
+    
+    </p>
+    <p class="small">
+    </p>
+</footer>
+
+        </section>
+
+        <script src="http://blog.christianlydemann.com/js/jquery-2.2.4.min.js"></script>
+<script src="http://blog.christianlydemann.com/js/main.js"></script>
+<script src="http://blog.christianlydemann.com/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-54304486-2', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+
+
+    </body>
+</html>

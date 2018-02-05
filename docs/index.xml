@@ -22,7 +22,7 @@ Docker overview Docker is used for running applications in containers making the
     </item>
     
     <item>
-      <title>Dynamic Form Rendering</title>
+      <title>Dynamic Form Rendering with Angular Reactive Forms</title>
       <link>http://blog.christianlydemann.com/post/dynamic-form-rendering/</link>
       <pubDate>Sun, 07 Jan 2018 17:38:54 +0100</pubDate>
       

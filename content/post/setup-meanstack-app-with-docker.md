@@ -1,6 +1,7 @@
 ---
 title: "Creating a MEAN stack Application with Docker"
 date: 2018-01-28T18:55:41+01:00
+tags: ["Docker", "NodeJS", "Angular"]
 draft: false
 ---
 

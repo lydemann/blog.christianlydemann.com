@@ -1,6 +1,7 @@
 ---
 title: "Setting up an OpenID connect system with Angular 5 and Identity server 4 (part 1)"
 date: 2018-03-27T10:13:20+02:00
+tags: ["OpenID Connect", "Identity Server", "Angular"]
 draft: false
 ---
 
@@ -49,7 +50,7 @@ The basic flow is:
 7. Authorization endpoint returns redirect with tokens
 8. The Angular app fetches tokens from the query params in the url and validates the id_token and access token according to: http://openid.net/specs/openid-connect-implicit-1_0.html#IDTokenValidation 
 9. Angular app requests authorized resource with newly obtained access token.
-10. The resource server is delegating the access token validation to the authorization server which response with validation result.
+10. The resource server is getting the json web key set (JWKS) from the authentication server (at {authUrl}/.well-known/openid-configuration/jwks) for verifying the access token signature with the public key, matching the private key that signed the JWT. Future request will just use an inmemory cache of this JWKS. The claims of the access token are here after validated according to [this](https://connect2id.com/blog/how-to-validate-an-openid-connect-id-token).
 11. The resource server now returns authorized resource to the client
 
 

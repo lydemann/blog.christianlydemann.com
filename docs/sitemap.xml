@@ -28,24 +28,54 @@
   
   <url>
     <loc>http://blog.christianlydemann.com/tags/angular/</loc>
-    <lastmod>2017-12-26T17:45:58+01:00</lastmod>
+    <lastmod>2018-03-27T10:13:20+02:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>http://blog.christianlydemann.com/categories/angular/</loc>
-    <lastmod>2017-12-26T17:45:58+01:00</lastmod>
+    <lastmod>2018-01-07T17:38:54+01:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>http://blog.christianlydemann.com/categories/</loc>
-    <lastmod>2017-12-26T17:45:58+01:00</lastmod>
+    <lastmod>2018-01-07T17:38:54+01:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
     <loc>http://blog.christianlydemann.com/</loc>
+    <lastmod>2018-03-27T10:13:20+02:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://blog.christianlydemann.com/tags/docker/</loc>
+    <lastmod>2018-01-28T18:55:41+01:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://blog.christianlydemann.com/tags/form/</loc>
+    <lastmod>2018-01-07T17:38:54+01:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://blog.christianlydemann.com/tags/identity-server/</loc>
+    <lastmod>2018-03-27T10:13:20+02:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://blog.christianlydemann.com/tags/nodejs/</loc>
+    <lastmod>2018-01-28T18:55:41+01:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://blog.christianlydemann.com/tags/openid-connect/</loc>
     <lastmod>2018-03-27T10:13:20+02:00</lastmod>
     <priority>0</priority>
   </url>
@@ -58,7 +88,7 @@
   
   <url>
     <loc>http://blog.christianlydemann.com/tags/</loc>
-    <lastmod>2017-12-26T17:45:58+01:00</lastmod>
+    <lastmod>2018-03-27T10:13:20+02:00</lastmod>
     <priority>0</priority>
   </url>
   

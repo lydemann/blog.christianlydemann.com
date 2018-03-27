@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Docker on Christian Lüdemann&#39;s blog</title>
+    <link>http://blog.christianlydemann.com/tags/docker/</link>
+    <description>Recent content in Docker on Christian Lüdemann&#39;s blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sun, 28 Jan 2018 18:55:41 +0100</lastBuildDate>
+    
+	<atom:link href="http://blog.christianlydemann.com/tags/docker/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Creating a MEAN stack Application with Docker</title>
+      <link>http://blog.christianlydemann.com/post/setup-meanstack-app-with-docker/</link>
+      <pubDate>Sun, 28 Jan 2018 18:55:41 +0100</pubDate>
+      
+      <guid>http://blog.christianlydemann.com/post/setup-meanstack-app-with-docker/</guid>
+      <description>This post is about creating a MEAN stack app consisting of Angular 5, MongoDB, NodeJS and Express, running in Docker. It is based on a Github demo I created, which can be found here.
+Docker overview Docker is used for running applications in containers making them contain everything needed for running the application: runtimes, system tools, libraries, OS and everything you would otherwise need to install yourself to run the application.</description>
+    </item>
+    
+  </channel>
+</rss>

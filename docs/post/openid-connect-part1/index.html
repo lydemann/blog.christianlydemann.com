@@ -41,9 +41,19 @@
                     </h1>
                     <h2 class="headline">
                     Mar 27, 2018 10:13
-                    · 722 words
+                    · 763 words
                     · 4 minutes read
                       <span class="tags">
+                      
+                      
+                          
+                              <a href="http://blog.christianlydemann.com/tags/openid-connect">OpenID Connect</a>
+                          
+                              <a href="http://blog.christianlydemann.com/tags/identity-server">Identity Server</a>
+                          
+                              <a href="http://blog.christianlydemann.com/tags/angular">Angular</a>
+                          
+                      
                       
                       </span>
                     </h2>
@@ -100,7 +110,7 @@ Code id_token token (returns authorization code, id_token and access token)</p>
 <li>Authorization endpoint returns redirect with tokens</li>
 <li>The Angular app fetches tokens from the query params in the url and validates the id_token and access token according to: <a href="http://openid.net/specs/openid-connect-implicit-1_0.html#IDTokenValidation">http://openid.net/specs/openid-connect-implicit-1_0.html#IDTokenValidation</a></li>
 <li>Angular app requests authorized resource with newly obtained access token.</li>
-<li>The resource server is delegating the access token validation to the authorization server which response with validation result.</li>
+<li>The resource server is getting the json web key set (JWKS) from the authentication server (at {authUrl}/.well-known/openid-configuration/jwks) for verifying the access token signature with the public key, matching the private key that signed the JWT. Future request will just use an in memory cache of this JWKS. The claims of the access token are hereafter validated according to <a href="https://connect2id.com/blog/how-to-validate-an-openid-connect-id-token">this</a>.</li>
 <li>The resource server now returns authorized resource to the client</li>
 </ol>
 

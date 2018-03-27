@@ -6,7 +6,7 @@
     <description>Recent content in Tags on Christian Lüdemann&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Tue, 26 Dec 2017 17:45:58 +0100</lastBuildDate>
+    <lastBuildDate>Tue, 27 Mar 2018 10:13:20 +0200</lastBuildDate>
     
 	<atom:link href="http://blog.christianlydemann.com/tags/index.xml" rel="self" type="application/rss+xml" />
     
@@ -14,9 +14,54 @@
     <item>
       <title>Angular</title>
       <link>http://blog.christianlydemann.com/tags/angular/</link>
-      <pubDate>Tue, 26 Dec 2017 17:45:58 +0100</pubDate>
+      <pubDate>Tue, 27 Mar 2018 10:13:20 +0200</pubDate>
       
       <guid>http://blog.christianlydemann.com/tags/angular/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Docker</title>
+      <link>http://blog.christianlydemann.com/tags/docker/</link>
+      <pubDate>Sun, 28 Jan 2018 18:55:41 +0100</pubDate>
+      
+      <guid>http://blog.christianlydemann.com/tags/docker/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Form</title>
+      <link>http://blog.christianlydemann.com/tags/form/</link>
+      <pubDate>Sun, 07 Jan 2018 17:38:54 +0100</pubDate>
+      
+      <guid>http://blog.christianlydemann.com/tags/form/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Identity Server</title>
+      <link>http://blog.christianlydemann.com/tags/identity-server/</link>
+      <pubDate>Tue, 27 Mar 2018 10:13:20 +0200</pubDate>
+      
+      <guid>http://blog.christianlydemann.com/tags/identity-server/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Nodejs</title>
+      <link>http://blog.christianlydemann.com/tags/nodejs/</link>
+      <pubDate>Sun, 28 Jan 2018 18:55:41 +0100</pubDate>
+      
+      <guid>http://blog.christianlydemann.com/tags/nodejs/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Openid Connect</title>
+      <link>http://blog.christianlydemann.com/tags/openid-connect/</link>
+      <pubDate>Tue, 27 Mar 2018 10:13:20 +0200</pubDate>
+      
+      <guid>http://blog.christianlydemann.com/tags/openid-connect/</guid>
       <description></description>
     </item>
     

@@ -6,10 +6,38 @@
     <description>Recent content in Angular on Christian Lüdemann&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Tue, 26 Dec 2017 17:45:58 +0100</lastBuildDate>
+    <lastBuildDate>Tue, 27 Mar 2018 10:13:20 +0200</lastBuildDate>
     
 	<atom:link href="http://blog.christianlydemann.com/tags/angular/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Setting up an OpenID connect system with Angular 5 and Identity server 4 (part 1)</title>
+      <link>http://blog.christianlydemann.com/post/openid-connect-part1/</link>
+      <pubDate>Tue, 27 Mar 2018 10:13:20 +0200</pubDate>
+      
+      <guid>http://blog.christianlydemann.com/post/openid-connect-part1/</guid>
+      <description>OpenID connect authentication with dotnet core and Angular will demonstrate how to setup an app that support authentication and access control of certain resources in the system. This guide is based on the Identity Server docs which seems to favour a setup with a client, an Identity server and an API being with authorized resources. This setup implements the OpenID connect standard which enables single sign on and distributed access control.</description>
+    </item>
+    
+    <item>
+      <title>Creating a MEAN stack Application with Docker</title>
+      <link>http://blog.christianlydemann.com/post/setup-meanstack-app-with-docker/</link>
+      <pubDate>Sun, 28 Jan 2018 18:55:41 +0100</pubDate>
+      
+      <guid>http://blog.christianlydemann.com/post/setup-meanstack-app-with-docker/</guid>
+      <description>This post is about creating a MEAN stack app consisting of Angular 5, MongoDB, NodeJS and Express, running in Docker. It is based on a Github demo I created, which can be found here.
+Docker overview Docker is used for running applications in containers making them contain everything needed for running the application: runtimes, system tools, libraries, OS and everything you would otherwise need to install yourself to run the application.</description>
+    </item>
+    
+    <item>
+      <title>Dynamic Form Rendering with Angular Reactive Forms</title>
+      <link>http://blog.christianlydemann.com/post/dynamic-form-rendering/</link>
+      <pubDate>Sun, 07 Jan 2018 17:38:54 +0100</pubDate>
+      
+      <guid>http://blog.christianlydemann.com/post/dynamic-form-rendering/</guid>
+      <description>A common need in enterprise application development is to support dynamically rendering of a form based on some domain specific metadata. This enables central control of domain logic and enables non-technical domain expert to control central domain logic that determines how the application is rendered, commonly using some CMS like GUI, presented in the domain language and used by the domain experts. Furthermore, it speeds up lead time of changes because the domain experts can implement changes themselves, working with a high level abstractions of the domain.</description>
+    </item>
     
     <item>
       <title>Getting Angular Application Ready for Production</title>

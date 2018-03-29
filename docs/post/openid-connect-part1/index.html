@@ -41,7 +41,7 @@
                     </h1>
                     <h2 class="headline">
                     Mar 27, 2018 10:13
-                    · 892 words
+                    · 896 words
                     · 5 minutes read
                       <span class="tags">
                       
@@ -66,15 +66,15 @@
 
 <p>OpenID connect is a standard adding authentication (verifying the user’s identity) on top of OAUTH2, which is only for authorization (access control). OpenID connect adds authentication by introducing the notion of an ID token, which is is an JWT, providing a signed proof of authentication of the user.</p>
 
-<h1 id="why-use-openid-connect">Why use OpenID Connect?</h1>
+<h2 id="why-use-openid-connect">Why use OpenID Connect?</h2>
 
 <ol>
-<li>OpenID connect is very useful for centralizing authentication and authorization in a setup with many microservices, enabling them to easily hook into the auth setup.</li>
-<li>OpenID is a common standard, making it easy for team members to collaborate with a widely used and well documented standard. It also make it very easy for new employees to understand the architecture if it&rsquo;s build around a common standard.</li>
-<li>Lots of good (tools)[<a href="http://openid.net/developers/certified/">http://openid.net/developers/certified/</a>] are making the implementation of this standard easy, like IdentityServer.</li>
+<li>OpenID connect is very useful for centralizing authentication and authorization in an infrastructure with many microservices, enabling them to easily hook into the auth setup.</li>
+<li>OpenID connect is a common standard, making it easy for team members to collaborate with a widely used and well documented standard. It also make it very easy for new employees to understand the architecture if it&rsquo;s build around a common standard.</li>
+<li>Lots of good <a href="http://openid.net/developers/certified/">tools</a> are making the implementation of this standard easy, like IdentityServer.</li>
 </ol>
 
-<h1 id="the-three-flows-of-openid-connect">The three flows of OpenID connect</h1>
+<h2 id="the-three-flows-of-openid-connect">The three flows of OpenID connect</h2>
 
 <p>In OpenID connect there are three flows, all based on the value of the response_type in the login request:</p>
 
@@ -90,7 +90,7 @@
 
 <ol>
 <li>Getting authorization code.</li>
-<li>Exchange authorization code for tokens.</li>
+<li>Exchange authorization code for tokens, including refresh tokens.</li>
 </ol>
 
 <p>The flow is initiated with the response_type parameter set to code and a client secret shared between the client and the auth server in the login request. After the user has been logged in, the authorization endpoint on the authorization server sends the authorization code (using query params in a redirect), which can be exchanged for an id_token, access token and/or a refresh token. The client server then gets this authorization code and exchanges it for token(s) by sending the authorization code to the token endpoint. The client now gets the tokens and authenticates the user by validating the ID token.</p>

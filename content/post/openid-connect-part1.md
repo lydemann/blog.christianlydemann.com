@@ -1,5 +1,5 @@
 ---
-title: "Setting up an OpenID connect system with Angular 5 and Identity server 4 (part 1)"
+title: "Creating an OpenID connect system with Angular 5 and Identity server 4 (OIDC part 1)"
 date: 2018-03-27T10:13:20+02:00
 tags: ["OpenID Connect", "Identity Server", "Angular"]
 draft: false

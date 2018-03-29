@@ -9,24 +9,34 @@ OpenID connect authentication with dotnet core and Angular will demonstrate how 
 
 OpenID connect is a standard adding authentication (verifying the user’s identity) on top of OAUTH2, which is only for authorization (access control). OpenID connect adds authentication by introducing the notion of an ID token, which is is an JWT, providing a signed proof of authentication of the user.
 
+## Why use OpenID Connect?
+
+1. OpenID connect is very useful for centralizing authentication and authorization in an infrastructure with many microservices, enabling them to easily hook into the auth setup.
+2. OpenID connect is a common standard, making it easy for team members to collaborate with a widely used and well documented standard. It also make it very easy for new employees to understand the architecture if it's build around a common standard.
+3. Lots of good [tools](http://openid.net/developers/certified/) are making the implementation of this standard easy, like IdentityServer.
+
+## The three flows of OpenID connect
+
 In OpenID connect there are three flows, all based on the value of the response_type in the login request:
 
-* Authorization code with response_type: 'code' (auhtorization code that can be exchanged for tokens in another round trip)
+* Authorization code with response_type: 'code' (auhtorization code that can be exchanged for tokens and refresh token in another round trip)
 * Implicit flow with response_type: 'id_token' and 'id_token token' (get the ID token or the ID token and access token)
 * Hybrid flow with response_type: 'code id_token', 'code token' and 'code id_token token' (always get the authorization code as well as either ID token and/or access token in first response)
 
 ### Authorization code flow
 
 This flow is the most commonly used flow used by traditional web apps with a server backend and contains two round trips:
-Getting authorization code.
-Exchange authorization code for tokens.
-The flow is initiated with the response_type parameter set to code in the login request. After the user has been logged in, the authorization endpoint on the authorization server sends the authorization code, which can be exchanged for an id_token, access token and/or a refresh token. The client server then gets this authorization code and exchanges it for token(s) by sending the authorization code to the token endpoint. The client now gets the tokens and authenticates the user by validating the ID token.
+
+1. Getting authorization code.
+2. Exchange authorization code for tokens, including refresh tokens.
+
+The flow is initiated with the response_type parameter set to code and a client secret shared between the client and the auth server in the login request. After the user has been logged in, the authorization endpoint on the authorization server sends the authorization code (using query params in a redirect), which can be exchanged for an id_token, access token and/or a refresh token. The client server then gets this authorization code and exchanges it for token(s) by sending the authorization code to the token endpoint. The client now gets the tokens and authenticates the user by validating the ID token.
 
 ### Implicit flow
 This flow is used for browser based apps that don’t have a back end. This flow is called implicit flow because the authentication is implicit from a redirect when the user has successfully logged in. After the user has logged in the authorization server returns a redirect to the client containing the access token and/or id_token. Be aware that this flow should not use refresh tokens as these are can be stolen from the browser with huge security consequences.
 
 ### Hybrid flow
-This flow contains a mix of the two above by requesting both a authorization code and tokens on first round trip. This flow enables the back end and front end to retrieve their own scoped tokens and is not used very often. The flow is initiated by requesting the authorization endpoint with the following response_type parameter values:
+This flow contains a mix of the two above by requesting both a authorization code and tokens on first round trip. This flow enables the back end and front end to retrieve their own scoped tokens, such as a scope with refresh token for the back end and access tokens for the front end, but is not used very often. The flow is initiated by requesting the authorization endpoint with the following response_type parameter values:
 Code id_token (returns authorization code and ID token)
 Code token (returns authorization code and access token)
 Code id_token token (returns authorization code, id_token and access token)
@@ -34,7 +44,7 @@ Code id_token token (returns authorization code, id_token and access token)
 
 ## The setup
 
-We are gonna implement implicit flow in our app because we are using it with an Angular app which can not keep secrets as it runs in the browser.
+We are gonna implement implicit flow in our app because we are using it with an Angular app, which should not keep secrets as it runs in the browser.
 
 The basic flow is:
 

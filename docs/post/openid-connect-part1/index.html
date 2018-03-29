@@ -41,8 +41,8 @@
                     </h1>
                     <h2 class="headline">
                     Mar 27, 2018 10:13
-                    · 763 words
-                    · 4 minutes read
+                    · 892 words
+                    · 5 minutes read
                       <span class="tags">
                       
                       
@@ -66,20 +66,34 @@
 
 <p>OpenID connect is a standard adding authentication (verifying the user’s identity) on top of OAUTH2, which is only for authorization (access control). OpenID connect adds authentication by introducing the notion of an ID token, which is is an JWT, providing a signed proof of authentication of the user.</p>
 
+<h1 id="why-use-openid-connect">Why use OpenID Connect?</h1>
+
+<ol>
+<li>OpenID connect is very useful for centralizing authentication and authorization in a setup with many microservices, enabling them to easily hook into the auth setup.</li>
+<li>OpenID is a common standard, making it easy for team members to collaborate with a widely used and well documented standard. It also make it very easy for new employees to understand the architecture if it&rsquo;s build around a common standard.</li>
+<li>Lots of good (tools)[<a href="http://openid.net/developers/certified/">http://openid.net/developers/certified/</a>] are making the implementation of this standard easy, like IdentityServer.</li>
+</ol>
+
+<h1 id="the-three-flows-of-openid-connect">The three flows of OpenID connect</h1>
+
 <p>In OpenID connect there are three flows, all based on the value of the response_type in the login request:</p>
 
 <ul>
-<li>Authorization code with response_type: &lsquo;code&rsquo; (auhtorization code that can be exchanged for tokens in another round trip)</li>
+<li>Authorization code with response_type: &lsquo;code&rsquo; (auhtorization code that can be exchanged for tokens and refresh token in another round trip)</li>
 <li>Implicit flow with response_type: &lsquo;id_token&rsquo; and &lsquo;id_token token&rsquo; (get the ID token or the ID token and access token)</li>
 <li>Hybrid flow with response_type: &lsquo;code id_token&rsquo;, &lsquo;code token&rsquo; and &lsquo;code id_token token&rsquo; (always get the authorization code as well as either ID token and/or access token in first response)</li>
 </ul>
 
 <h3 id="authorization-code-flow">Authorization code flow</h3>
 
-<p>This flow is the most commonly used flow used by traditional web apps with a server backend and contains two round trips:
-Getting authorization code.
-Exchange authorization code for tokens.
-The flow is initiated with the response_type parameter set to code in the login request. After the user has been logged in, the authorization endpoint on the authorization server sends the authorization code, which can be exchanged for an id_token, access token and/or a refresh token. The client server then gets this authorization code and exchanges it for token(s) by sending the authorization code to the token endpoint. The client now gets the tokens and authenticates the user by validating the ID token.</p>
+<p>This flow is the most commonly used flow used by traditional web apps with a server backend and contains two round trips:</p>
+
+<ol>
+<li>Getting authorization code.</li>
+<li>Exchange authorization code for tokens.</li>
+</ol>
+
+<p>The flow is initiated with the response_type parameter set to code and a client secret shared between the client and the auth server in the login request. After the user has been logged in, the authorization endpoint on the authorization server sends the authorization code (using query params in a redirect), which can be exchanged for an id_token, access token and/or a refresh token. The client server then gets this authorization code and exchanges it for token(s) by sending the authorization code to the token endpoint. The client now gets the tokens and authenticates the user by validating the ID token.</p>
 
 <h3 id="implicit-flow">Implicit flow</h3>
 
@@ -87,14 +101,14 @@ The flow is initiated with the response_type parameter set to code in the login 
 
 <h3 id="hybrid-flow">Hybrid flow</h3>
 
-<p>This flow contains a mix of the two above by requesting both a authorization code and tokens on first round trip. This flow enables the back end and front end to retrieve their own scoped tokens and is not used very often. The flow is initiated by requesting the authorization endpoint with the following response_type parameter values:
+<p>This flow contains a mix of the two above by requesting both a authorization code and tokens on first round trip. This flow enables the back end and front end to retrieve their own scoped tokens, such as a scope with refresh token for the back end and access tokens for the front end, but is not used very often. The flow is initiated by requesting the authorization endpoint with the following response_type parameter values:
 Code id_token (returns authorization code and ID token)
 Code token (returns authorization code and access token)
 Code id_token token (returns authorization code, id_token and access token)</p>
 
 <h2 id="the-setup">The setup</h2>
 
-<p>We are gonna implement implicit flow in our app because we are using it with an Angular app which can not keep secrets as it runs in the browser.</p>
+<p>We are gonna implement implicit flow in our app because we are using it with an Angular app, which should not keep secrets as it runs in the browser.</p>
 
 <p>The basic flow is:</p>
 

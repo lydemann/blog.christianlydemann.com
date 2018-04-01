@@ -11,13 +11,13 @@ OpenID connect is a standard adding authentication (verifying the user’s ident
 
 ## Why use OpenID Connect?
 
-1. OpenID connect is very useful for centralizing authentication and authorization in an infrastructure with many microservices, enabling them to easily hook into the auth setup.
+1. OpenID connect is very useful for centralizing authentication and authorization in an infrastructure with many micro services, enabling single sign on for the user and for resource services to easily hook into the auth setup.
 2. OpenID connect is a common standard, making it easy for team members to collaborate with a widely used and well documented standard. It also make it very easy for new employees to understand the architecture if it's build around a common standard.
 3. Lots of good [tools](http://openid.net/developers/certified/) are making the implementation of this standard easy, like IdentityServer.
 
 ## The Access token
 
-OpenID connect uses the access token JWT from OAuth2, which is a JWT token that can be used to access resources. It contains information about the issuer (the authorization server), audience for whom the access token is for and a scope list, which the scopes this token grants access to. This access token needs to be send to the resource api on every authorized resource request and a valid access token is required for accessing authorized resources.
+OpenID connect uses the access token JWT from OAuth2, which is a JWT token that is used to access authorized resources. It contains information about the issuer (the authorization server), audience for whom the access token is for and a scope list, which the scopes this token grants access to. This access token needs to be send to the resource api on every authorized resource request and a valid access token is required for accessing authorized resources.
 
 A JWT is encoded in base64, so it can easily be decoded for accessing reading the header and payload it is containing (so don’t store confidential information in a JWT!).
 The header contains metadata for the JWT like algorithm used (can be asymmetric and symmetric). The payload contains claims connected to the access grant. Lastly is the signature composed of a hash of header and payload. This ensures that if the JWT got modified by a client the signature would invalidate the JWT.
@@ -55,19 +55,19 @@ The flow is initiated with the response_type parameter set to code and a client 
 ### Implicit flow
 This flow is used for browser based apps that don’t have a back end. This flow is called implicit flow because the authentication is implicit from a redirect when the user has successfully logged in. After the user has logged in the authorization server returns a redirect to the client containing the access token and/or id_token. Be aware that this flow should not use refresh tokens as these are can be stolen from the browser with huge security consequences.
 
+When working with implicit flow it is crucial to always use https so a man in the middle attack is not intercepting the access token. Also, even though the access token is typically short lived it is stored in the app state and therefore the client should be aware of cross site scripting (XSS) vulnerabilities, if a malicious hacker gets to add javascript to the app and fetches access tokens. For these reasons, the implicit flow is perceived the most unsecure flow but the vulnabilities can be overcome with https, XSS protection and proper token validation according to the OpenID connect specification.
+
 ### Hybrid flow
 This flow contains a mix of the two above by requesting both a authorization code and tokens on first round trip. This flow enables the back end and front end to retrieve their own scoped tokens, such as a scope with refresh token for the back end and access tokens for the front end, but is not used very often. The flow is initiated by requesting the authorization endpoint with the following response_type parameter values:
 Code id_token (returns authorization code and ID token)
 Code token (returns authorization code and access token)
 Code id_token token (returns authorization code, id_token and access token)
 
-
 ## The setup
 
 We are gonna implement implicit flow in our app because we are using it with an Angular app, which should not keep secrets as it runs in the browser.
 
 The basic flow is:
-
 
 ![Implicit flow](/images/openid-connect-part1/oic-implicit.png)
 
@@ -83,7 +83,6 @@ The basic flow is:
 10. The resource server is getting the json web key set (JWKS) from the authentication server (at {authUrl}/.well-known/openid-configuration/jwks) for verifying the access token signature with the public key, matching the private key that signed the JWT. Future request will just use an in memory cache of this JWKS. The claims of the access token are hereafter validated according to [this](https://connect2id.com/blog/how-to-validate-an-openid-connect-id-token).
 11. The resource server now returns authorized resource to the client
 
-
 In the following parts we are gonna create an OpenID connect implicit flow implementation with:
 
 - Client server, hosting an Angular app
@@ -91,7 +90,6 @@ In the following parts we are gonna create an OpenID connect implicit flow imple
 - Resource server implemented as an ASP.NET core web api
 
 Next part we will look into how to setup the authorization server with identity server 4.
-
 
 
 # Resources

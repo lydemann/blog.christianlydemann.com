@@ -44,7 +44,7 @@
                     </h1>
                     <h2 class="headline">
                     Mar 27, 2018 10:13
-                    · 1175 words
+                    · 1278 words
                     · 6 minutes read
                       <span class="tags">
                       
@@ -72,14 +72,14 @@
 <h2 id="why-use-openid-connect">Why use OpenID Connect?</h2>
 
 <ol>
-<li>OpenID connect is very useful for centralizing authentication and authorization in an infrastructure with many microservices, enabling them to easily hook into the auth setup.</li>
+<li>OpenID connect is very useful for centralizing authentication and authorization in an infrastructure with many micro services, enabling them to easily hook into the auth setup.</li>
 <li>OpenID connect is a common standard, making it easy for team members to collaborate with a widely used and well documented standard. It also make it very easy for new employees to understand the architecture if it&rsquo;s build around a common standard.</li>
 <li>Lots of good <a href="http://openid.net/developers/certified/">tools</a> are making the implementation of this standard easy, like IdentityServer.</li>
 </ol>
 
 <h2 id="the-access-token">The Access token</h2>
 
-<p>OpenID connect uses the access token JWT from OAuth2, which is a JWT token that can be used to access resources. It contains information about the issuer (the authorization server), audience for whom the access token is for and a scope list, which the scopes this token grants access to. This access token needs to be send to the resource api on every authorized resource request and a valid access token is required for accessing authorized resources.</p>
+<p>OpenID connect uses the access token JWT from OAuth2, which is a JWT token that is used to access authorized resources. It contains information about the issuer (the authorization server), audience for whom the access token is for and a scope list, which the scopes this token grants access to. This access token needs to be send to the resource api on every authorized resource request and a valid access token is required for accessing authorized resources.</p>
 
 <p>A JWT is encoded in base64, so it can easily be decoded for accessing reading the header and payload it is containing (so don’t store confidential information in a JWT!).
 The header contains metadata for the JWT like algorithm used (can be asymmetric and symmetric). The payload contains claims connected to the access grant. Lastly is the signature composed of a hash of header and payload. This ensures that if the JWT got modified by a client the signature would invalidate the JWT.</p>
@@ -120,7 +120,8 @@ The ID Token was introduced to OpenID connect for allowing the client to verify 
 
 <h3 id="implicit-flow">Implicit flow</h3>
 
-<p>This flow is used for browser based apps that don’t have a back end. This flow is called implicit flow because the authentication is implicit from a redirect when the user has successfully logged in. After the user has logged in the authorization server returns a redirect to the client containing the access token and/or id_token. Be aware that this flow should not use refresh tokens as these are can be stolen from the browser with huge security consequences.</p>
+<p>This flow is used for browser based apps that don’t have a back end. This flow is called implicit flow because the authentication is implicit from a redirect when the user has successfully logged in. After the user has logged in the authorization server returns a redirect to the client containing the access token and/or id_token. Be aware that this flow should not use refresh tokens as these are can be stolen from the browser with huge security consequences.
+When working with implicit flow it is crucial to always use https so a man in the middle attack is not intercepting the access token. Also, even though the access token is typically short lived it is stored in the app state and therefore the client should be aware of cross site scripting (XSS) vulnerabilities, if a malicious hacker gets to add javascript to the app and fetches access tokens. For these reasons, the implicit flow is perceived the most unsecure flow but the vulnabilities can be overcome with https, XSS protection and proper token validation according to the OpenID connect specification.</p>
 
 <h3 id="hybrid-flow">Hybrid flow</h3>
 

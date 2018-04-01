@@ -63,7 +63,7 @@ Code id_token (returns authorization code and ID token)
 Code token (returns authorization code and access token)
 Code id_token token (returns authorization code, id_token and access token)
 
-## The setup
+# The setup
 
 We are gonna implement implicit flow in our app because we are using it with an Angular app, which should not keep secrets as it runs in the browser.
 

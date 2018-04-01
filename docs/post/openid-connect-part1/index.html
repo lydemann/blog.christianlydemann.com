@@ -8,13 +8,16 @@
 		<meta name="description" content="Technical blog">
 		<meta name="generator" content="Hugo 0.37" />
 		<title>Creating an OpenID connect system with Angular 5 and Identity server 4 (OIDC part 1) &middot; Christian Lüdemann&#39;s blog</title>
-		<link rel="shortcut icon" href="http://blog.christianlydemann.com/images/favicon.ico">
-		<link rel="stylesheet" href="http://blog.christianlydemann.com/css/style.css">
-		<link rel="stylesheet" href="http://blog.christianlydemann.com/css/highlight.css">
+		<link rel="shortcut icon" href="https://blog.christianlydemann.com/images/favicon.ico">
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/style.css">
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/highlight.css">
 		
 
 		
-		<link rel="stylesheet" href="http://blog.christianlydemann.com/css/font-awesome.min.css">
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/font-awesome.min.css">
+		
+
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/monosocialiconsfont.css">
 		
 
 		
@@ -24,10 +27,10 @@
        <nav class="main-nav">
 	
 	
-		<a href='http://blog.christianlydemann.com/'> <span class="arrow">←</span>Home</a>
+		<a href='https://blog.christianlydemann.com/'> <span class="arrow">←</span>Home</a>
 	
-	<a href='http://blog.christianlydemann.com/post'>Posts</a>
-	<a href='http://blog.christianlydemann.com/about'>About</a>
+	<a href='https://blog.christianlydemann.com/post'>Posts</a>
+	<a href='https://blog.christianlydemann.com/about'>About</a>
 
 	
 </nav>
@@ -41,17 +44,17 @@
                     </h1>
                     <h2 class="headline">
                     Mar 27, 2018 10:13
-                    · 896 words
-                    · 5 minutes read
+                    · 1175 words
+                    · 6 minutes read
                       <span class="tags">
                       
                       
                           
-                              <a href="http://blog.christianlydemann.com/tags/openid-connect">OpenID Connect</a>
+                              <a href="https://blog.christianlydemann.com/tags/openid-connect">OpenID Connect</a>
                           
-                              <a href="http://blog.christianlydemann.com/tags/identity-server">Identity Server</a>
+                              <a href="https://blog.christianlydemann.com/tags/identity-server">Identity Server</a>
                           
-                              <a href="http://blog.christianlydemann.com/tags/angular">Angular</a>
+                              <a href="https://blog.christianlydemann.com/tags/angular">Angular</a>
                           
                       
                       
@@ -74,12 +77,32 @@
 <li>Lots of good <a href="http://openid.net/developers/certified/">tools</a> are making the implementation of this standard easy, like IdentityServer.</li>
 </ol>
 
+<h2 id="the-access-token">The Access token</h2>
+
+<p>OpenID connect uses the access token JWT from OAuth2, which is a JWT token that can be used to access resources. It contains information about the issuer (the authorization server), audience for whom the access token is for and a scope list, which the scopes this token grants access to. This access token needs to be send to the resource api on every authorized resource request and a valid access token is required for accessing authorized resources.</p>
+
+<p>A JWT is encoded in base64, so it can easily be decoded for accessing reading the header and payload it is containing (so don’t store confidential information in a JWT!).
+The header contains metadata for the JWT like algorithm used (can be asymmetric and symmetric). The payload contains claims connected to the access grant. Lastly is the signature composed of a hash of header and payload. This ensures that if the JWT got modified by a client the signature would invalidate the JWT.</p>
+
+<p>An access token can look like this:</p>
+
+<p><img src="/images/openid-connect-part1/access-token.PNG" alt="Access token" /></p>
+
+<h2 id="id-token">ID Token</h2>
+
+<p>The ID token is a JWT (JSON Web Token) containing a digitally signed proof of user authentication, asserting the users identity with a unique subject id (sub). It specifies a the time the user was authenticated (iat) and for whom this is for (aud).
+The ID Token was introduced to OpenID connect for allowing the client to verify that the user has been successfully authenticated before the expiration (exp) timestamp. The ID token is newer sent to the resource api and only used by the client to validate if the user is properly authenticated before requesting authorized resources.</p>
+
+<p>An ID token can look like this:</p>
+
+<p><img src="/images/openid-connect-part1/id_token.PNG" alt="Id token" /></p>
+
 <h2 id="the-three-flows-of-openid-connect">The three flows of OpenID connect</h2>
 
 <p>In OpenID connect there are three flows, all based on the value of the response_type in the login request:</p>
 
 <ul>
-<li>Authorization code with response_type: &lsquo;code&rsquo; (auhtorization code that can be exchanged for tokens and refresh token in another round trip)</li>
+<li>Authorization code with response_type: &lsquo;code&rsquo; (authorization code that can be exchanged for tokens and refresh token in another round trip)</li>
 <li>Implicit flow with response_type: &lsquo;id_token&rsquo; and &lsquo;id_token token&rsquo; (get the ID token or the ID token and access token)</li>
 <li>Hybrid flow with response_type: &lsquo;code id_token&rsquo;, &lsquo;code token&rsquo; and &lsquo;code id_token token&rsquo; (always get the authorization code as well as either ID token and/or access token in first response)</li>
 </ul>
@@ -138,6 +161,10 @@ Code id_token token (returns authorization code, id_token and access token)</p>
 
 <p>Next part we will look into how to setup the authorization server with identity server 4.</p>
 
+<h1 id="resources">Resources</h1>
+
+<p><a href="https://connect2id.com/learn/openid-connect">https://connect2id.com/learn/openid-connect</a></p>
+
                 </section>
             </article>
 
@@ -190,9 +217,9 @@ Code id_token token (returns authorization code, id_token and access token)</p>
 
         </section>
 
-        <script src="http://blog.christianlydemann.com/js/jquery-2.2.4.min.js"></script>
-<script src="http://blog.christianlydemann.com/js/main.js"></script>
-<script src="http://blog.christianlydemann.com/js/highlight.min.js"></script>
+        <script src="https://blog.christianlydemann.com/js/jquery-2.2.4.min.js"></script>
+<script src="https://blog.christianlydemann.com/js/main.js"></script>
+<script src="https://blog.christianlydemann.com/js/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad();</script>
 
 

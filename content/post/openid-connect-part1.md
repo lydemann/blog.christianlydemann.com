@@ -15,11 +15,31 @@ OpenID connect is a standard adding authentication (verifying the user’s ident
 2. OpenID connect is a common standard, making it easy for team members to collaborate with a widely used and well documented standard. It also make it very easy for new employees to understand the architecture if it's build around a common standard.
 3. Lots of good [tools](http://openid.net/developers/certified/) are making the implementation of this standard easy, like IdentityServer.
 
+## The Access token
+
+OpenID connect uses the access token JWT from OAuth2, which is a JWT token that can be used to access resources. It contains information about the issuer (the authorization server), audience for whom the access token is for and a scope list, which the scopes this token grants access to. This access token needs to be send to the resource api on every authorized resource request and a valid access token is required for accessing authorized resources.
+
+A JWT is encoded in base64, so it can easily be decoded for accessing reading the header and payload it is containing (so don’t store confidential information in a JWT!).
+The header contains metadata for the JWT like algorithm used (can be asymmetric and symmetric). The payload contains claims connected to the access grant. Lastly is the signature composed of a hash of header and payload. This ensures that if the JWT got modified by a client the signature would invalidate the JWT.
+
+An access token can look like this:
+
+![Access token](/images/openid-connect-part1/access-token.PNG)
+
+## ID Token
+
+The ID token is a JWT (JSON Web Token) containing a digitally signed proof of user authentication, asserting the users identity with a unique subject id (sub). It specifies a the time the user was authenticated (iat) and for whom this is for (aud).
+The ID Token was introduced to OpenID connect for allowing the client to verify that the user has been successfully authenticated before the expiration (exp) timestamp. The ID token is newer sent to the resource api and only used by the client to validate if the user is properly authenticated before requesting authorized resources.
+
+An ID token can look like this:
+
+![Id token](/images/openid-connect-part1/id_token.PNG)
+
 ## The three flows of OpenID connect
 
 In OpenID connect there are three flows, all based on the value of the response_type in the login request:
 
-* Authorization code with response_type: 'code' (auhtorization code that can be exchanged for tokens and refresh token in another round trip)
+* Authorization code with response_type: 'code' (authorization code that can be exchanged for tokens and refresh token in another round trip)
 * Implicit flow with response_type: 'id_token' and 'id_token token' (get the ID token or the ID token and access token)
 * Hybrid flow with response_type: 'code id_token', 'code token' and 'code id_token token' (always get the authorization code as well as either ID token and/or access token in first response)
 
@@ -58,7 +78,7 @@ The basic flow is:
 5. The authorization server redirects to the login page
 6. The user logs in and gives consent to accessing the authorized resources
 7. Authorization endpoint returns redirect with tokens
-8. The Angular app fetches tokens from the query params in the url and validates the id_token and access token according to: http://openid.net/specs/openid-connect-implicit-1_0.html#IDTokenValidation 
+8. The Angular app fetches tokens from the query params in the url and validates the id_token and access token according to: http://openid.net/specs/openid-connect-implicit-1_0.html#IDTokenValidation
 9. Angular app requests authorized resource with newly obtained access token.
 10. The resource server is getting the json web key set (JWKS) from the authentication server (at {authUrl}/.well-known/openid-configuration/jwks) for verifying the access token signature with the public key, matching the private key that signed the JWT. Future request will just use an in memory cache of this JWKS. The claims of the access token are hereafter validated according to [this](https://connect2id.com/blog/how-to-validate-an-openid-connect-id-token).
 11. The resource server now returns authorized resource to the client
@@ -71,3 +91,9 @@ In the following parts we are gonna create an OpenID connect implicit flow imple
 - Resource server implemented as an ASP.NET core web api
 
 Next part we will look into how to setup the authorization server with identity server 4.
+
+
+
+# Resources
+
+[https://connect2id.com/learn/openid-connect](https://connect2id.com/learn/openid-connect)

@@ -2,30 +2,30 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Angular on Christian Lüdemann&#39;s blog</title>
-    <link>http://blog.christianlydemann.com/categories/angular/</link>
+    <link>https://blog.christianlydemann.com/categories/angular/</link>
     <description>Recent content in Angular on Christian Lüdemann&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <lastBuildDate>Sun, 07 Jan 2018 17:38:54 +0100</lastBuildDate>
     
-	<atom:link href="http://blog.christianlydemann.com/categories/angular/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://blog.christianlydemann.com/categories/angular/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>Dynamic Form Rendering with Angular Reactive Forms</title>
-      <link>http://blog.christianlydemann.com/post/dynamic-form-rendering/</link>
+      <link>https://blog.christianlydemann.com/post/dynamic-form-rendering/</link>
       <pubDate>Sun, 07 Jan 2018 17:38:54 +0100</pubDate>
       
-      <guid>http://blog.christianlydemann.com/post/dynamic-form-rendering/</guid>
+      <guid>https://blog.christianlydemann.com/post/dynamic-form-rendering/</guid>
       <description>A common need in enterprise application development is to support dynamically rendering of a form based on some domain specific metadata. This enables central control of domain logic and enables non-technical domain expert to control central domain logic that determines how the application is rendered, commonly using some CMS like GUI, presented in the domain language and used by the domain experts. Furthermore, it speeds up lead time of changes because the domain experts can implement changes themselves, working with a high level abstractions of the domain.</description>
     </item>
     
     <item>
       <title>Getting Angular Application Ready for Production</title>
-      <link>http://blog.christianlydemann.com/post/angular-production-build/</link>
+      <link>https://blog.christianlydemann.com/post/angular-production-build/</link>
       <pubDate>Tue, 26 Dec 2017 17:45:58 +0100</pubDate>
       
-      <guid>http://blog.christianlydemann.com/post/angular-production-build/</guid>
+      <guid>https://blog.christianlydemann.com/post/angular-production-build/</guid>
       <description>This is an overview of how to prepare an Angular app for production. There will be future posts going more in depth with the various steps described here. Note: Angular CLI is fortunately doing a lot of this out of the box, but it’s still valuable to know what it is doing in case you need to set this up without Angular CLI. When preparing an Angular app for production it is important to optimize it in the various areas:</description>
     </item>
     

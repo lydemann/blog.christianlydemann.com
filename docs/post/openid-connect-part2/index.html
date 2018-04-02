@@ -1,0 +1,329 @@
+    <!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="author" content="Christian Lüdemann&#39;s blog">
+		<meta name="description" content="Technical blog">
+		<meta name="generator" content="Hugo 0.37" />
+		<title>Creating identity server setup with client credential authentication (OIDC part 2) &middot; Christian Lüdemann&#39;s blog</title>
+		<link rel="shortcut icon" href="https://blog.christianlydemann.com/images/favicon.ico">
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/style.css">
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/highlight.css">
+		
+
+		
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/font-awesome.min.css">
+		
+
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/monosocialiconsfont.css">
+		
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://blog.christianlydemann.com/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://blog.christianlydemann.com/post'>Posts</a>
+	<a href='https://blog.christianlydemann.com/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper">
+            <article class="post">
+                <header>
+                    <h1>
+                        Creating identity server setup with client credential authentication (OIDC part 2)
+                    </h1>
+                    <h2 class="headline">
+                    Mar 29, 2018 16:07
+                    · 927 words
+                    · 5 minutes read
+                      <span class="tags">
+                      
+                      </span>
+                    </h2>
+                </header>
+                
+                <section id="post-body">
+                    
+
+<p>In this post we are gonna take <a href="http://blog.christianlydemann.com/post/openid-connect-part1/">part 1</a> into action by creating a OpenID connect setup with a three server system using client credentials for authentication The three servers are:</p>
+
+<ol>
+<li>AuthorizationServer, implemented with IdentityServer4.</li>
+<li>ResourceApi, implemented with ASP.NET core and IdentityServer4.AccessTokenValidation Nuget package for access token validation.</li>
+<li>ClientApp, implemented as an ASP.NET MVC application with Angular using IdentityModel for getting access token.</li>
+</ol>
+
+<p>The basic idea is that we register an in memory client and api resource on the AuthorizationServer, hardcode the client credentials in the ClientApp and exchanging these for an access token, which will grant the user access to an authorized endpoint on the ResourceApi.</p>
+
+<p><strong>## Authorization server</strong></p>
+
+<p>Setup the authorization server by creating a new ASP.NET core project (empty) with .NET core 2.0. Install IdentityServer4 by opening the Nuget console and write:</p>
+
+<p><code>Install-Package IdentityServer4</code></p>
+
+<p>or find the package on Nuget and click install.</p>
+
+<p>In this part we are simply setting up a hardcoded api resource and test clients by creating a new file called Config.cs and specify these as:</p>
+
+<pre><code class="language-csharp">public class Config
+{
+   public static IEnumerable&lt;ApiResource&gt; GetApiResources()
+   {
+       return new List&lt;ApiResource&gt;
+       {
+           new ApiResource(&quot;resourceApi&quot;, &quot;API Application&quot;)
+       };
+   }
+
+   public static IEnumerable&lt;Client&gt; GetClients()
+   {
+       return new List&lt;Client&gt;
+       {
+           new Client
+           {
+               ClientId = &quot;clientApp&quot;,
+
+               // no interactive user, use the clientid/secret for authentication
+               AllowedGrantTypes = GrantTypes.ClientCredentials,
+
+               // secret for authentication
+               ClientSecrets =
+               {
+                   new Secret(&quot;secret&quot;.Sha256())
+               },
+
+               AllowedScopes = { &quot;resourceApi&quot; }
+           }
+       };
+   }
+}
+</code></pre>
+
+<p>Above is the Config.cs file which is specifying an ApiResource with the name &ldquo;resourceApi&rdquo; and a client that has this api resource in its AllowedScopes. Because we are using basic authentication in this part we are setting the AllowedGrantTypes to ClientCredentials.</p>
+
+<p>The client app and secret are also set here.</p>
+
+<p>These are set as in memory resources in the Startup.cs with AddInMemoryApiResources and AddInMemoryClients:</p>
+
+<pre><code class="language-csharp">public void ConfigureServices(IServiceCollection services)
+{
+   services.AddIdentityServer()
+   .AddDeveloperSigningCredential()
+   .AddInMemoryApiResources(Config.GetApiResources())
+   .AddInMemoryClients(Config.GetClients());
+}
+</code></pre>
+
+<p>Note: AddDeveloperSigningCredential is for generating a random RSA256 pair on startup, which we will use for this demo. In a production setup, AddSigningCredential should be used to reference the real RSA256 keys.</p>
+
+<p>Finally the IdentityServer middleware are setup with:</p>
+
+<pre><code>public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+{
+   if (env.IsDevelopment())
+   {
+       app.UseDeveloperExceptionPage();
+   }
+   app.UseIdentityServer();
+}
+
+</code></pre>
+
+<h2 id="resourceapi">ResourceApi</h2>
+
+<p>The ResourceApi will contain an authorized endpoint for getting the claims of the access token. We create a new ASP.NET core web api and call it ResourceApi.</p>
+
+<p>To enable validation of access token we install the Nuget package: <code>IdentityServer4.AccessTokenValidation</code></p>
+
+<p>For this, we will first need to setup bearer authentication middleware in Startup.cs:</p>
+
+<p><em>ResourceApi/Startup.cs</em></p>
+
+<pre><code>public void ConfigureServices(IServiceCollection services)
+{
+   services.AddMvcCore()
+       .AddAuthorization()
+       .AddJsonFormatters();
+   services.AddAuthentication(&quot;Bearer&quot;)
+       .AddIdentityServerAuthentication(options =&gt;
+       {
+           options.Authority = &quot;http://localhost:5000&quot;;
+           options.RequireHttpsMetadata = false;
+           options.ApiName = &quot;resourceApi&quot;;
+       });
+}
+</code></pre>
+
+<p>This is setting up authorization, with the “AddAuthorization” middleware, for enabling making endpoint authorized with the &ldquo;Authorized&rdquo; attribute, as well as setting up middleware for bearer authentication. We specify that we use identityServer with AddIdentityServerAuthentication. The Autority is the baseUrl of the AuthorizationServer and this is used for getting the public key when the Resource server is verifying and validating the access token for an authorized request. Future requests will use an in memory cached public key for verifying the access token.<br />
+ApiName should match the name of the ApiResource we created for the Authorizationserver.
+Now the authentication and authorization is setup for ResourceApi, so we create a new controller called IdentityController.cs and gives it an endpoint with the [Authorize] attribute, enforcing that the requester is authorized to access this:</p>
+
+<pre><code class="language-csharp">[Route(&quot;[controller]&quot;)]
+[Authorize]
+public class IdentityController : ControllerBase
+{
+   [HttpGet]
+   public IActionResult Get()
+   {
+       return new JsonResult(from c in User.Claims select new { c.Type, c.Value });
+   }
+}
+</code></pre>
+
+<p>This is returning the Users claims as json if the requester is authorized.</p>
+
+<h2 id="client-app">Client App</h2>
+
+<p>In this part, we are not using Angular, but because we are using it later, we will scaffold a new ASP.NET core MVC app with Angular.</p>
+
+<p>We are here going to create a new controller called IdentityController.cs for authenticating using client credentials and thus obtaining an access token used for invoking the authorized endpoint at the ResourceApi.</p>
+
+<p>For getting the access token from the AuthorizationServer, we are using the Nuget package:</p>
+
+<p><code>IdentityModel</code></p>
+
+<p>We are going to create an IdentityController endpoint called index:</p>
+
+<p><em>ClientApp/Controllers/IdentityController.cs</em></p>
+
+<pre><code class="language-csharp">public async Task&lt;IActionResult&gt; Index()
+{
+   // discover endpoints from metadata
+   var oidcDiscoveryResult = await DiscoveryClient.GetAsync(&quot;http://localhost:5000&quot;);
+   if (oidcDiscoveryResult.IsError)
+   {
+       Console.WriteLine(oidcDiscoveryResult.Error);
+       return Json(oidcDiscoveryResult.Error);
+   }
+   // request token
+   var tokenClient = new TokenClient(oidcDiscoveryResult.TokenEndpoint, &quot;clientApp&quot;, &quot;secret&quot;);
+   var tokenResponse = await tokenClient.RequestClientCredentialsAsync(&quot;resourceApi&quot;);
+   if (tokenResponse.IsError)
+   {
+       Console.WriteLine(tokenResponse.Error);
+       throw new HttpRequestException(tokenResponse.Error);
+   }
+   Console.WriteLine(tokenResponse.Json);
+   Console.WriteLine(&quot;\n\n&quot;);
+   // call api
+   var client = new HttpClient();
+   client.SetBearerToken(tokenResponse.AccessToken);
+   var response = await client.GetAsync(&quot;http://localhost:5001/identity&quot;);
+   if (!response.IsSuccessStatusCode)
+   {
+       Console.WriteLine(response.StatusCode);
+       throw new HttpRequestException(response.StatusCode.ToString());
+   }
+   else
+   {
+       var content = await response.Content.ReadAsStringAsync();
+       Console.WriteLine(JArray.Parse(content));
+       return Json(content);
+   }
+}
+</code></pre>
+
+<p>This method is getting the User claims from the authorized endpoint at the resource server by performing three steps:</p>
+
+<ol>
+<li>Use DiscoveryClient to get the TokenEndpoint.</li>
+<li>Use the TokenEndpoint + client credentials and resource scope to request an access token with RequestClientCredentialsAsync.</li>
+<li>Set the obtained access token with SetBearerToken and invoke the authorized ResourceApi endpoint.</li>
+</ol>
+
+<h1 id="running-it-all-together">Running it all together</h1>
+
+<p>If we right click on our solution and click properties we can select &ldquo;Multiple startup projects&rdquo; and make our three projects run simultaneously. Hereafter we can click F5 and run all the projects. If we in the browser navigate to “<a href="http://localhost:5002/identity">http://localhost:5002/identity</a>” we should be able to be authentication and authorized to access the authorized resource using the access token, obtained from the client credentials:
+<img src="/images/openid-connect-part2/oidc-screenshot.png" alt="image alt text" /></p>
+
+<p>The whole solution for this part can be found on my Github <a href="https://github.com/lydemann/oidc-angular-identityserver/tree/master/Solution%201%20-%20Setup%20OIDC%20system%20with%20client%20credentials">here</a>.</p>
+
+<p>Next part we are gonna make the IdentityServer interactive by creating and sign up/login feature.</p>
+
+                </section>
+            </article>
+
+            
+
+            
+                
+                    <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'blog-christianlydemann-com'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+                
+            
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+
+	
+	
+    <a class="symbol" href="https://github.com/lydemann">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Christian Lüdemann&#39;s blog
+    
+    </p>
+    <p class="small">
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://blog.christianlydemann.com/js/jquery-2.2.4.min.js"></script>
+<script src="https://blog.christianlydemann.com/js/main.js"></script>
+<script src="https://blog.christianlydemann.com/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-54304486-2', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+
+
+    </body>
+</html>

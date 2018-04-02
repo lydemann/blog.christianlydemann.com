@@ -6,10 +6,20 @@
     <description>Recent content on Christian Lüdemann&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Tue, 27 Mar 2018 10:13:20 +0200</lastBuildDate>
+    <lastBuildDate>Thu, 29 Mar 2018 16:07:57 +0200</lastBuildDate>
     
 	<atom:link href="https://blog.christianlydemann.com/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Creating identity server setup with client credential authentication (OIDC part 2)</title>
+      <link>https://blog.christianlydemann.com/post/openid-connect-part2/</link>
+      <pubDate>Thu, 29 Mar 2018 16:07:57 +0200</pubDate>
+      
+      <guid>https://blog.christianlydemann.com/post/openid-connect-part2/</guid>
+      <description>In this post we are gonna take part 1 into action by creating a OpenID connect setup with a three server system using client credentials for authentication The three servers are:
+ AuthorizationServer, implemented with IdentityServer4. ResourceApi, implemented with ASP.NET core and IdentityServer4.AccessTokenValidation Nuget package for access token validation. ClientApp, implemented as an ASP.NET MVC application with Angular using IdentityModel for getting access token.  The basic idea is that we register an in memory client and api resource on the AuthorizationServer, hardcode the client credentials in the ClientApp and exchanging these for an access token, which will grant the user access to an authorized endpoint on the ResourceApi.</description>
+    </item>
     
     <item>
       <title>Creating an OpenID connect system with Angular 5 and Identity server 4 (OIDC part 1)</title>

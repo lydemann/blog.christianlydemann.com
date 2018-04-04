@@ -13,12 +13,6 @@ In this post we are gonna take [part 1]({{< relref "openid-connect-part1-openid-
 
 The basic idea is that we register an in memory client and api resource on the AuthorizationServer, hardcode the client credentials in the ClientApp and exchanging these for an access token, which will grant the user access to an authorized endpoint on the ResourceApi.
 
-# The OpenID connect with IdentityServer4 and Angular series
-
-*Part 1: Creating an OpenID connect system with Angular 5 and IdentityServer4*
-*Part 2: Creating identity server setup with client credential authentication
-
-
 **## Authorization server**
 
 Setup the authorization server by creating a new ASP.NET core project (empty) with .NET core 2.0. Install IdentityServer4 by opening the Nuget console and write:

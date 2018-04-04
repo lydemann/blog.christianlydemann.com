@@ -6,27 +6,37 @@
     <description>Recent content in Posts on Christian Lüdemann&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Thu, 29 Mar 2018 16:07:57 +0200</lastBuildDate>
+    <lastBuildDate>Wed, 04 Apr 2018 06:26:55 +0200</lastBuildDate>
     
 	<atom:link href="https://blog.christianlydemann.com/post/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
+      <title>Openid Connect Interactive authentication with Authorization Code Flow (OIDC Part 3)</title>
+      <link>https://blog.christianlydemann.com/post/openid-connect-part3-authorization-code-flow/</link>
+      <pubDate>Wed, 04 Apr 2018 06:26:55 +0200</pubDate>
+      
+      <guid>https://blog.christianlydemann.com/post/openid-connect-part3-authorization-code-flow/</guid>
+      <description>Creating interactive authentication with an authorization code client (OIDC part 3)
+In [part 2]() we created a simple OIDC setup using hard coded client credentials for the client to obtain an access token, so it could invoke the resource API. In this post, we are gonna enable interactive login on the identity server with hardcoded test users using authorization flow. After the users has successfully logged in, the requested scopes will be provided to the client app using the callback url.</description>
+    </item>
+    
+    <item>
       <title>Creating identity server setup with client credential authentication (OIDC part 2)</title>
-      <link>https://blog.christianlydemann.com/post/openid-connect-part2/</link>
+      <link>https://blog.christianlydemann.com/post/openid-connect-part2-client-credentials/</link>
       <pubDate>Thu, 29 Mar 2018 16:07:57 +0200</pubDate>
       
-      <guid>https://blog.christianlydemann.com/post/openid-connect-part2/</guid>
+      <guid>https://blog.christianlydemann.com/post/openid-connect-part2-client-credentials/</guid>
       <description>In this post we are gonna take part 1 into action by creating a OpenID connect setup with a three server system using client credentials for authentication The three servers are:
  AuthorizationServer, implemented with IdentityServer4. ResourceApi, implemented with ASP.NET core and IdentityServer4.AccessTokenValidation Nuget package for access token validation. ClientApp, implemented as an ASP.NET MVC application with Angular using IdentityModel for getting access token.  The basic idea is that we register an in memory client and api resource on the AuthorizationServer, hardcode the client credentials in the ClientApp and exchanging these for an access token, which will grant the user access to an authorized endpoint on the ResourceApi.</description>
     </item>
     
     <item>
       <title>Creating an OpenID connect system with Angular 5 and Identity server 4 (OIDC part 1)</title>
-      <link>https://blog.christianlydemann.com/post/openid-connect-part1/</link>
+      <link>https://blog.christianlydemann.com/post/openid-connect-part1-openid-connect-overview/</link>
       <pubDate>Tue, 27 Mar 2018 10:13:20 +0200</pubDate>
       
-      <guid>https://blog.christianlydemann.com/post/openid-connect-part1/</guid>
+      <guid>https://blog.christianlydemann.com/post/openid-connect-part1-openid-connect-overview/</guid>
       <description>OpenID connect authentication with dotnet core and Angular will demonstrate how to setup an app that support authentication and access control of certain resources in the system. This guide is based on the Identity Server docs which seems to favour a setup with a client, an Identity server and an API being with authorized resources. This setup implements the OpenID connect standard which enables single sign on and distributed access control.</description>
     </item>
     

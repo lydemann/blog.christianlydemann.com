@@ -3,12 +3,17 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>https://blog.christianlydemann.com/post/openid-connect-part2/</loc>
+    <loc>https://blog.christianlydemann.com/post/openid-connect-part3-authorization-code-flow/</loc>
+    <lastmod>2018-04-04T06:26:55+02:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://blog.christianlydemann.com/post/openid-connect-part2-client-credentials/</loc>
     <lastmod>2018-03-29T16:07:57+02:00</lastmod>
   </url>
   
   <url>
-    <loc>https://blog.christianlydemann.com/post/openid-connect-part1/</loc>
+    <loc>https://blog.christianlydemann.com/post/openid-connect-part1-openid-connect-overview/</loc>
     <lastmod>2018-03-27T10:13:20+02:00</lastmod>
   </url>
   
@@ -51,7 +56,7 @@
   
   <url>
     <loc>https://blog.christianlydemann.com/</loc>
-    <lastmod>2018-03-29T16:07:57+02:00</lastmod>
+    <lastmod>2018-04-04T06:26:55+02:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -87,7 +92,7 @@
   
   <url>
     <loc>https://blog.christianlydemann.com/post/</loc>
-    <lastmod>2018-03-29T16:07:57+02:00</lastmod>
+    <lastmod>2018-04-04T06:26:55+02:00</lastmod>
     <priority>0</priority>
   </url>
   

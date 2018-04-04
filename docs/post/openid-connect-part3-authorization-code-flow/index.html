@@ -1,0 +1,380 @@
+    <!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="author" content="Christian Lüdemann&#39;s blog">
+		<meta name="description" content="Technical blog">
+		<meta name="generator" content="Hugo 0.37" />
+		<title>Openid Connect Interactive authentication with Authorization Code Flow (OIDC Part 3) &middot; Christian Lüdemann&#39;s blog</title>
+		<link rel="shortcut icon" href="https://blog.christianlydemann.com/images/favicon.ico">
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/style.css">
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/highlight.css">
+		
+
+		
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/font-awesome.min.css">
+		
+
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/monosocialiconsfont.css">
+		
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://blog.christianlydemann.com/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://blog.christianlydemann.com/post'>Posts</a>
+	<a href='https://blog.christianlydemann.com/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper">
+            <article class="post">
+                <header>
+                    <h1>
+                        Openid Connect Interactive authentication with Authorization Code Flow (OIDC Part 3)
+                    </h1>
+                    <h2 class="headline">
+                    Apr 4, 2018 06:26
+                    · 1118 words
+                    · 6 minutes read
+                      <span class="tags">
+                      
+                      </span>
+                    </h2>
+                </header>
+                
+                <section id="post-body">
+                    
+
+<p>Creating interactive authentication with an authorization code client (OIDC part 3)</p>
+
+<p>In [part 2]() we created a simple OIDC setup using hard coded client credentials for the client to obtain an access token, so it could invoke the resource API.
+In this post, we are gonna enable interactive login on the identity server with hardcoded test users using authorization flow. After the users has successfully logged in, the requested scopes will be provided to the client app using the callback url. This will enable the client app to display the users claims on an authorized MVC view.</p>
+
+<p>To enable this, we will need to do some changes on the authorization server and client app:</p>
+
+<h2 id="authorization-server-setup-interactive-login">Authorization server - setup interactive login</h2>
+
+<p>The easiest way to get started with an interactive login is to download the quickstart controllers and view supporting this by running the below script (as administrator) in the command prompt inside the authorization server folder:</p>
+
+<pre><code>iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/IdentityServer/IdentityServer4.Quickstart.UI/release/get.ps1'))
+</code></pre>
+
+<p>After this the authorization server project should have a folder structure like this:</p>
+
+<pre><code>├───Quickstart
+│   ├───Account
+│   ├───Consent
+│   ├───Diagnostics
+│   ├───Grants
+│   └───Home
+├───Views
+│   ├───Account
+│   ├───Consent
+│   ├───Diagnostics
+│   ├───Grants
+│   ├───Home
+│   └───Shared
+└───wwwroot
+    ├───css
+    ├───js
+    └───lib
+        ├───bootstrap
+        │   ├───css
+        │   ├───fonts
+        │   └───js
+        └───jquery
+</code></pre>
+
+<p>This provides you with controllers and views for managing accounts, consent and gives you a standard MVC homepage (of course with cringe-worthy bootstrap styling!).</p>
+
+<p>For the login we are going to create an authorization code grant client in the Config.cs file:</p>
+
+<p><strong>Config.cs</strong>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-csharp" data-lang="csharp"><span style="color:#75715e">// OpenID Connect authorization flow client (MVC)
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">new</span> Client
+{
+    ClientId = <span style="color:#e6db74">&#34;mvc&#34;</span>,
+    ClientName = <span style="color:#e6db74">&#34;MVC Client&#34;</span>,
+    AllowedGrantTypes = <span style="color:#a6e22e">GrantTypes</span>.Code,
+    ClientSecrets =
+    {
+        <span style="color:#66d9ef">new</span> Secret(<span style="color:#e6db74">&#34;secret&#34;</span>.Sha256())
+    },
+    RedirectUris = { <span style="color:#e6db74">&#34;http://localhost:5002/signin-oidc&#34;</span> },
+    PostLogoutRedirectUris = { <span style="color:#e6db74">&#34;http://localhost:5002/signout-callback-oidc&#34;</span> },
+    AllowedScopes =
+    {
+        <span style="color:#a6e22e">IdentityServerConstants</span>.<span style="color:#a6e22e">StandardScopes</span>.OpenId,
+        <span style="color:#a6e22e">IdentityServerConstants</span>.<span style="color:#a6e22e">StandardScopes</span>.Profile,
+        <span style="color:#e6db74">&#34;resourceApi&#34;</span>
+    }
+}</code></pre></div></p>
+
+<p>Here we are making this use authorization code flow by setting the <em>AllowedGrantTypes</em> to <em>Code</em>. Because we use authorization code flow we also need to specify a client secret, to be shared with the client app. The redirect urls are just set to identity server defaults. The allowed scopes is containing the resourceApi as well as two <strong>IdentityResources</strong> resources that are added to the Config.cs file as:</p>
+
+<p><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-csharp" data-lang="csharp"><span style="color:#75715e">// scopes define the resources in your system
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> IEnumerable&lt;IdentityResource&gt; GetIdentityResources()
+{
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> List&lt;IdentityResource&gt;
+    {
+        <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">IdentityResources</span>.OpenId(),
+        <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">IdentityResources</span>.Profile(),
+    };
+}</code></pre></div>
+Where an APIResource grants access to resources on an API, Identity Resources grants access to information about the user. These Identity Resources enables scopes for getting a unique id of the users, called subject id, as well as users basic profile information such as name, address etc.</p>
+
+<p>We are setting these new configurations up in the Startup.cs file that should look like this:
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-csharp" data-lang="csharp"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Startup</span>
+{
+    <span style="color:#75715e">// This method gets called by the runtime. Use this method to add services to the container.
+</span><span style="color:#75715e"></span>    <span style="color:#75715e">// For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> ConfigureServices(IServiceCollection services)
+    {
+        <span style="color:#a6e22e">services</span>.AddMvc();
+
+        <span style="color:#a6e22e">services</span>.AddIdentityServer()
+        .AddDeveloperSigningCredential()
+        .AddInMemoryApiResources(<span style="color:#a6e22e">Config</span>.GetApiResources())
+        .AddInMemoryIdentityResources(<span style="color:#a6e22e">Config</span>.GetIdentityResources())
+        .AddInMemoryClients(<span style="color:#a6e22e">Config</span>.GetClients())
+        .AddTestUsers(<span style="color:#a6e22e">Config</span>.GetTestUsers());
+    }
+
+    <span style="color:#75715e">// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> Configure(IApplicationBuilder app, IHostingEnvironment env)
+    {
+        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">env</span>.IsDevelopment())
+        {
+            <span style="color:#a6e22e">app</span>.UseDeveloperExceptionPage();
+        }
+
+        <span style="color:#a6e22e">app</span>.UseIdentityServer();
+
+        <span style="color:#a6e22e">app</span>.UseStaticFiles();
+        <span style="color:#a6e22e">app</span>.UseMvcWithDefaultRoute();
+    }
+}</code></pre></div>
+Since the last part, we have now added MVC and static files middleware  as well as AddInMemoryIdentityResources for the identity resources.</p>
+
+<h2 id="client-app-create-authorized-view-with-user-information">Client app - Create authorized view with user information</h2>
+
+<p>For the client app we are gonna create an authorized view for displaying user information contained in the id token.</p>
+
+<p>First we are setting the authentication middleware up for our new authorization code flow client:</p>
+
+<p><strong>ClientApp/Startup.cs</strong>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-csharp" data-lang="csharp"><span style="color:#a6e22e">JwtSecurityTokenHandler</span>.<span style="color:#a6e22e">DefaultInboundClaimTypeMap</span>.Clear();
+<span style="color:#a6e22e">services</span>.AddAuthentication(options =&gt;
+    {
+        <span style="color:#a6e22e">options</span>.DefaultScheme = <span style="color:#e6db74">&#34;Cookies&#34;</span>;
+        <span style="color:#a6e22e">options</span>.DefaultChallengeScheme = <span style="color:#e6db74">&#34;oidc&#34;</span>;
+    })
+    .AddCookie(<span style="color:#e6db74">&#34;Cookies&#34;</span>)
+    .AddOpenIdConnect(<span style="color:#e6db74">&#34;oidc&#34;</span>, options =&gt;
+    {
+        <span style="color:#a6e22e">options</span>.SignInScheme = <span style="color:#e6db74">&#34;Cookies&#34;</span>;
+
+        <span style="color:#a6e22e">options</span>.Authority = <span style="color:#e6db74">&#34;http://localhost:5000&#34;</span>;
+        <span style="color:#a6e22e">options</span>.RequireHttpsMetadata = <span style="color:#66d9ef">false</span>;
+        <span style="color:#a6e22e">options</span>.ResponseType = <span style="color:#e6db74">&#34;code&#34;</span>;
+        <span style="color:#a6e22e">options</span>.ClientId = <span style="color:#e6db74">&#34;mvc&#34;</span>;
+        <span style="color:#a6e22e">options</span>.ClientSecret = <span style="color:#e6db74">&#34;secret&#34;</span>;
+        <span style="color:#a6e22e">options</span>.SaveTokens = <span style="color:#66d9ef">true</span>;
+    });</code></pre></div></p>
+
+<p>Here we are disabling the Jwt Claim type mapping before we call the middlewareJwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();<code>
+Otherwise the claim names would have long URI names instead of how they are in the JWT payload.
+For ease, we are using cookies here that will be send to the app client server on every request. It is specified that the client should use authorization flow with:
+</code> options.ResponseType = &ldquo;code&rdquo; ``
+We are connecting to the identity server client by specifying the corresponding client id and client secret. <em>options.SaveTokens = true</em> is saving the tokens in the authentication cookie. That way the tokens can easily be access from the <em>HTTPContext</em>.</p>
+
+<p>The <em>IdentityController</em> from last part is to be rewritten a little to return the claims from basic authentication to view by encapsulating the logic in a private method:
+<strong>ClientApp/Controllers/IdentityController</strong>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-csharp" data-lang="csharp"><span style="color:#66d9ef">private</span> <span style="color:#66d9ef">async</span> Task&lt;HttpResponseMessage&gt; GetUserClaimsFromApiWithClientCredentials()
+{
+    <span style="color:#75715e">// discover endpoints from metadata
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">var</span> oidcDiscoveryResult = <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">DiscoveryClient</span>.GetAsync(<span style="color:#e6db74">&#34;http://localhost:5000&#34;</span>);
+    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">oidcDiscoveryResult</span>.IsError)
+    {
+        <span style="color:#a6e22e">Console</span>.WriteLine(<span style="color:#a6e22e">oidcDiscoveryResult</span>.Error);
+        <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> HttpRequestException(<span style="color:#a6e22e">oidcDiscoveryResult</span>.Error);
+    }
+
+    <span style="color:#75715e">// request token
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">var</span> tokenClient = <span style="color:#66d9ef">new</span> TokenClient(<span style="color:#a6e22e">oidcDiscoveryResult</span>.TokenEndpoint, <span style="color:#e6db74">&#34;clientApp&#34;</span>, <span style="color:#e6db74">&#34;secret&#34;</span>);
+    <span style="color:#66d9ef">var</span> tokenResponse = <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">tokenClient</span>.RequestClientCredentialsAsync(<span style="color:#e6db74">&#34;resourceApi&#34;</span>);
+
+    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">tokenResponse</span>.IsError)
+    {
+        <span style="color:#a6e22e">Console</span>.WriteLine(<span style="color:#a6e22e">tokenResponse</span>.Error);
+        <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> HttpRequestException(<span style="color:#a6e22e">tokenResponse</span>.Error);
+    }
+
+    <span style="color:#a6e22e">Console</span>.WriteLine(<span style="color:#a6e22e">tokenResponse</span>.Json);
+    <span style="color:#a6e22e">Console</span>.WriteLine(<span style="color:#e6db74">&#34;\n\n&#34;</span>);
+
+    <span style="color:#75715e">// call API
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">var</span> client = <span style="color:#66d9ef">new</span> HttpClient();
+    <span style="color:#a6e22e">client</span>.SetBearerToken(<span style="color:#a6e22e">tokenResponse</span>.AccessToken);
+
+    <span style="color:#66d9ef">var</span> response = <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">client</span>.GetAsync(<span style="color:#e6db74">&#34;http://localhost:5001/api/identity&#34;</span>);
+    <span style="color:#66d9ef">return</span> response;
+}</code></pre></div></p>
+
+<p>The <em>Index</em> action is now an authorized endpoint only accessible if the authentication middleware accepts the request (valid authentication of user).</p>
+
+<p><strong>AppClient/Controllers/IdentityController</strong>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-csharp" data-lang="csharp"><span style="color:#a6e22e">[Authorize]</span>
+<span style="color:#66d9ef">public</span> <span style="color:#66d9ef">async</span> Task&lt;IActionResult&gt; Index()
+{
+    <span style="color:#66d9ef">var</span> userClaimsVM = <span style="color:#66d9ef">new</span> UserClaimsVM();
+    <span style="color:#66d9ef">var</span> userClaimsWithClientCredentials = <span style="color:#66d9ef">await</span> GetUserClaimsFromApiWithClientCredentials();
+    <span style="color:#a6e22e">userClaimsVM</span>.UserClaimsWithClientCredentials = <span style="color:#a6e22e">userClaimsWithClientCredentials</span>.IsSuccessStatusCode ? <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">userClaimsWithClientCredentials</span>.<span style="color:#a6e22e">Content</span>.ReadAsStringAsync() : <span style="color:#a6e22e">userClaimsWithClientCredentials</span>.<span style="color:#a6e22e">StatusCode</span>.ToString();
+
+    <span style="color:#66d9ef">return</span> View(userClaimsVM);
+}</code></pre></div></p>
+
+<p>This is simply getting the user claims from the resourceApi using access token obtained with clientCredential authentication. The data is passed to the view using a simple view model containing a property for user claims with client credentials.</p>
+
+<p>Also, we create a logout action for logging out the user by clearing the authentication cookie and sign out of OpenID connect session:
+<strong>ClientApp/Controllers/IdentityController.cs</strong>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-csharp" data-lang="csharp"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">async</span> Task Logout()
+{
+    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">HttpContext</span>.SignOutAsync(<span style="color:#e6db74">&#34;Cookies&#34;</span>);
+    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">HttpContext</span>.SignOutAsync(<span style="color:#e6db74">&#34;oidc&#34;</span>);
+}</code></pre></div></p>
+
+<p>Finally we create a simple view for showing the client credentials from the resource API alongside with client credentials obtained using the new authorization code client:</p>
+
+<p><strong>AppClient/Views/Identity/Index.cshtml</strong>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">@model ClientApp.Models.UserClaimsVM;
+@{
+    ViewData[&#34;Title&#34;] = &#34;Index&#34;;
+}
+
+&lt;<span style="color:#f92672">h2</span>&gt;Index&lt;/<span style="color:#f92672">h2</span>&gt;
+
+&lt;<span style="color:#f92672">dl</span>&gt;
+    &lt;<span style="color:#f92672">dt</span>&gt;
+        UserClaimsWithClientCredentials
+    &lt;/<span style="color:#f92672">dt</span>&gt;
+    &lt;<span style="color:#f92672">dd</span>&gt;
+        @Model.UserClaimsWithClientCredentials
+    &lt;/<span style="color:#f92672">dd</span>&gt;
+&lt;/<span style="color:#f92672">dl</span>&gt;
+
+User claims:
+&lt;<span style="color:#f92672">dl</span>&gt;
+    @foreach (var claim in User.Claims)
+    {
+        &lt;<span style="color:#f92672">dt</span>&gt;@claim.Type&lt;/<span style="color:#f92672">dt</span>&gt;
+        &lt;<span style="color:#f92672">dd</span>&gt;@claim.Value&lt;/<span style="color:#f92672">dd</span>&gt;
+    }
+&lt;/<span style="color:#f92672">dl</span>&gt;
+
+&lt;<span style="color:#f92672">form</span> <span style="color:#a6e22e">asp-controller</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Identity&#34;</span> <span style="color:#a6e22e">asp-action</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Logout&#34;</span> <span style="color:#a6e22e">method</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;post&#34;</span>&gt;
+    &lt;<span style="color:#f92672">button</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;submit&#34;</span>&gt;Logout&lt;/<span style="color:#f92672">button</span>&gt;
+&lt;/<span style="color:#f92672">form</span>&gt;</code></pre></div></p>
+
+<p>Notice that in the bottom of the view we also add a button for logging out the user with the logout action.</p>
+
+<h1 id="running-it-all">Running it all</h1>
+
+<p>We can now run the whole application by right clicking the solution in the Solution Explore-&gt;Properties and select <em>Start</em> for the three projects as:</p>
+
+<p><img src="/images/openid-connect/oidc-run-multi.PNG" alt="Run all project Visual Studio" /></p>
+
+<p>We should now be able to go to “<a href="http://localhost:5002/identity”">http://localhost:5002/identity”</a> and be prompted for login, which we do with one of the test users. Hereafter we will be redirected to the identity view looking like:</p>
+
+<p><img src="/images/openid-connect/identity-view-authcode.PNG" alt="OpenId screenshot" /></p>
+
+<p>Great job following along this far!
+Next time we will setup an hybrid flow client that can call the resource API.</p>
+
+                </section>
+            </article>
+
+            
+
+            
+                
+                    <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'blog-christianlydemann-com'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+                
+            
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+
+	
+	
+    <a class="symbol" href="https://github.com/lydemann">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Christian Lüdemann&#39;s blog
+    
+    </p>
+    <p class="small">
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://blog.christianlydemann.com/js/jquery-2.2.4.min.js"></script>
+<script src="https://blog.christianlydemann.com/js/main.js"></script>
+<script src="https://blog.christianlydemann.com/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-54304486-2', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+
+
+    </body>
+</html>

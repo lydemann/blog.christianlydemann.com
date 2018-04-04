@@ -12,7 +12,7 @@
     
     
     <item>
-      <title>Openid Connect Interactive authentication with Authorization Code Flow (OIDC Part 3)</title>
+      <title>OpenID Connect Interactive authentication with Authorization Code Flow (OIDC Part 3)</title>
       <link>https://blog.christianlydemann.com/post/openid-connect-part3-authorization-code-flow/</link>
       <pubDate>Wed, 04 Apr 2018 06:26:55 +0200</pubDate>
       
@@ -32,7 +32,7 @@ In [part 2]() we created a simple OIDC setup using hard coded client credentials
     </item>
     
     <item>
-      <title>Creating an OpenID connect system with Angular 5 and Identity server 4 (OIDC part 1)</title>
+      <title>Creating an OpenID connect system with Angular 5 and IdentityServer4 (OIDC part 1)</title>
       <link>https://blog.christianlydemann.com/post/openid-connect-part1-openid-connect-overview/</link>
       <pubDate>Tue, 27 Mar 2018 10:13:20 +0200</pubDate>
       

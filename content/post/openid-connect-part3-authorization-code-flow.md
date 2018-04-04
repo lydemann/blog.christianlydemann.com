@@ -1,5 +1,5 @@
 ---
-title: "Openid Connect Interactive authentication with Authorization Code Flow (OIDC Part 3)"
+title: "OpenID Connect Interactive authentication with Authorization Code Flow (OIDC Part 3)"
 date: 2018-04-04T06:26:55+02:00
 draft: false
 ---

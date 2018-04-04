@@ -4,13 +4,20 @@ date: 2018-03-29T16:07:57+02:00
 draft: false
 ---
 
-In this post we are gonna take [part 1](http://blog.christianlydemann.com/post/openid-connect-part1/) into action by creating a OpenID connect setup with a three server system using client credentials for authentication The three servers are:
+
+In this post we are gonna take [part 1]({{< relref "openid-connect-part1-openid-connect-overview.md" >}}) into action by creating a OpenID connect setup with a three server system using client credentials for authentication The three servers are:
 
 1. AuthorizationServer, implemented with IdentityServer4.
 2. ResourceApi, implemented with ASP.NET core and IdentityServer4.AccessTokenValidation Nuget package for access token validation.
 3. ClientApp, implemented as an ASP.NET MVC application with Angular using IdentityModel for getting access token.
 
 The basic idea is that we register an in memory client and api resource on the AuthorizationServer, hardcode the client credentials in the ClientApp and exchanging these for an access token, which will grant the user access to an authorized endpoint on the ResourceApi.
+
+# The OpenID connect with IdentityServer4 and Angular series
+
+*Part 1: Creating an OpenID connect system with Angular 5 and IdentityServer4*
+*Part 2: Creating identity server setup with client credential authentication
+
 
 **## Authorization server**
 
@@ -193,7 +200,7 @@ This method is getting the User claims from the authorized endpoint at the resou
 # Running it all together
 
 If we right click on our solution and click properties we can select "Multiple startup projects" and make our three projects run simultaneously. Hereafter we can click F5 and run all the projects. If we in the browser navigate to “[http://localhost:5002/identity](http://localhost:5002/identity)” we should be able to be authentication and authorized to access the authorized resource using the access token, obtained from the client credentials:
-![image alt text](/images/openid-connect-part2/oidc-screenshot.png)
+![OpenId screenshot](/images/openid-connect-part2/oidc-screenshot.png)
 
 The whole solution for this part can be found on my Github [here]( https://github.com/lydemann/oidc-angular-identityserver/tree/master/Solution%201%20-%20Setup%20OIDC%20system%20with%20client%20credentials).
 

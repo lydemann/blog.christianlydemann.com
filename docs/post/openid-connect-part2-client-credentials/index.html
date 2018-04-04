@@ -44,7 +44,7 @@
                     </h1>
                     <h2 class="headline">
                     Mar 29, 2018 16:07
-                    · 927 words
+                    · 957 words
                     · 5 minutes read
                       <span class="tags">
                       
@@ -55,7 +55,7 @@
                 <section id="post-body">
                     
 
-<p>In this post we are gonna take <a href="http://blog.christianlydemann.com/post/openid-connect-part1/">part 1</a> into action by creating a OpenID connect setup with a three server system using client credentials for authentication The three servers are:</p>
+<p>In this post we are gonna take <a href="/post/openid-connect-part1-openid-connect-overview/">part 1</a> into action by creating a OpenID connect setup with a three server system using client credentials for authentication The three servers are:</p>
 
 <ol>
 <li>AuthorizationServer, implemented with IdentityServer4.</li>
@@ -64,6 +64,11 @@
 </ol>
 
 <p>The basic idea is that we register an in memory client and api resource on the AuthorizationServer, hardcode the client credentials in the ClientApp and exchanging these for an access token, which will grant the user access to an authorized endpoint on the ResourceApi.</p>
+
+<h1 id="the-openid-connect-with-identityserver4-and-angular-series">The OpenID connect with IdentityServer4 and Angular series</h1>
+
+<p><em>Part 1: Creating an OpenID connect system with Angular 5 and IdentityServer4</em>
+*Part 2: Creating identity server setup with client credential authentication</p>
 
 <p><strong>## Authorization server</strong></p>
 
@@ -244,7 +249,7 @@ public class IdentityController : ControllerBase
 <h1 id="running-it-all-together">Running it all together</h1>
 
 <p>If we right click on our solution and click properties we can select &ldquo;Multiple startup projects&rdquo; and make our three projects run simultaneously. Hereafter we can click F5 and run all the projects. If we in the browser navigate to “<a href="http://localhost:5002/identity">http://localhost:5002/identity</a>” we should be able to be authentication and authorized to access the authorized resource using the access token, obtained from the client credentials:
-<img src="/images/openid-connect-part2/oidc-screenshot.png" alt="image alt text" /></p>
+<img src="/images/openid-connect-part2/oidc-screenshot.png" alt="OpenId screenshot" /></p>
 
 <p>The whole solution for this part can be found on my Github <a href="https://github.com/lydemann/oidc-angular-identityserver/tree/master/Solution%201%20-%20Setup%20OIDC%20system%20with%20client%20credentials">here</a>.</p>
 

@@ -33,6 +33,10 @@
   </url>
   
   <url>
+    <loc>https://blog.christianlydemann.com/templates/openid-connect-series-posts/</loc>
+  </url>
+  
+  <url>
     <loc>https://blog.christianlydemann.com/about/</loc>
   </url>
   
@@ -99,6 +103,11 @@
   <url>
     <loc>https://blog.christianlydemann.com/tags/</loc>
     <lastmod>2018-03-27T10:13:20+02:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>https://blog.christianlydemann.com/templates/</loc>
     <priority>0</priority>
   </url>
   

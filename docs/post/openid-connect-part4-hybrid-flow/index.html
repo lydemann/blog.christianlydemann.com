@@ -1,0 +1,289 @@
+    <!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="author" content="Christian Lüdemann&#39;s blog">
+		<meta name="description" content="Technical blog">
+		<meta name="generator" content="Hugo 0.37" />
+		<title>OpenID Connect Hybrid Flow for calling client api (OIDC Part 4) &middot; Christian Lüdemann&#39;s blog</title>
+		<link rel="shortcut icon" href="https://blog.christianlydemann.com/images/favicon.ico">
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/style.css">
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/highlight.css">
+		
+
+		
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/font-awesome.min.css">
+		
+
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/monosocialiconsfont.css">
+		
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://blog.christianlydemann.com/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://blog.christianlydemann.com/post'>Posts</a>
+	<a href='https://blog.christianlydemann.com/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper">
+            <article class="post">
+                <header>
+                    <h1>
+                        OpenID Connect Hybrid Flow for calling client api (OIDC Part 4)
+                    </h1>
+                    <h2 class="headline">
+                    Apr 7, 2018 18:23
+                    · 739 words
+                    · 4 minutes read
+                      <span class="tags">
+                      
+                      </span>
+                    </h2>
+                </header>
+                
+                <section id="post-body">
+                    
+
+<p>Last post we created an authorization code client, enabling the client to get
+the user claims from the id token, exchanged for the post login authorization
+code. That way we were able to display the user roles on an authorized MVC view.
+This time, instead of getting the user roles from the userInfo endpoint directly
+with an access token from AppClient, we are going to get it from the resource
+API, using an access token.</p>
+
+<p>Note: This could also have been implemented with authentication code client,
+since we are only using an MVC client in this part. Using the hybrid client here
+is just for learning purpose, enabling you later to use the hybrid client both
+from a browser and a MVC app simultaneously.</p>
+
+<h2 id="authorizationserver-setting-up-the-hybrid-client">AuthorizationServer - Setting up the hybrid client</h2>
+
+<p>Compared to part 3 of the OIDC series, the only thing we need to do to the
+AuthorizationServer is to add a hybrid client:</p>
+
+<p><strong>AuthorizationServer/Config.cs</strong>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-csharp" data-lang="csharp"> 
+<span style="color:#75715e">// OpenID Connect hybrid flow client (MVC) new Client { ClientId = &#34;mvc&#34;, ClientName = &#34;MVC
+</span><span style="color:#75715e"></span>Client<span style="color:#e6db74">&#34;, AllowedGrantTypes = GrantTypes.Hybrid,
+</span><span style="color:#e6db74"></span>ClientSecrets =
+{
+    <span style="color:#66d9ef">new</span> Secret(<span style="color:#e6db74">&#34;secret&#34;</span>.Sha256())
+},
+
+RedirectUris = { <span style="color:#e6db74">&#34;http://localhost:5002/signin-oidc&#34;</span> },
+PostLogoutRedirectUris = { <span style="color:#e6db74">&#34;http://localhost:5002/signout-callback-oidc&#34;</span> },
+AllowedScopes =
+{
+    <span style="color:#a6e22e">IdentityServerConstants</span>.<span style="color:#a6e22e">StandardScopes</span>.OpenId,
+    <span style="color:#a6e22e">IdentityServerConstants</span>.<span style="color:#a6e22e">StandardScopes</span>.Profile,
+    <span style="color:#e6db74">&#34;resourceApi&#34;</span>
+},
+AllowOfflineAccess = <span style="color:#66d9ef">true</span>
+}</code></pre></div></p>
+
+<p>The only difference between this and the previous authorization code client is
+that browsers are here allowed to get the id token on first roundtrip. We could also get the access token on the first roundtrip if we enabled that here. With authorization code flow, they needed to exchange their authorization code for an id token.</p>
+
+<h2 id="clientapp-calling-the-resource-api-with-access-token">ClientApp - Calling the resource api with access token</h2>
+
+<p>In part 3 we already set the AppClient up for using hybrid flow by adding the ClientSecret in the Startup authentication middleware. The only difference is
+here we are requesting the id_token as well as the authorization code on first
+request:</p>
+
+<p><strong>ClientApp/Startup.cs</strong>
+<code>options.ResponseType = &quot;code id_token&quot;;</code></p>
+
+<p>After the user has been authenticated, the <em>HTTPContext</em> is going to contain an
+access token as well as the id token. We use this in a method for calling the resource api’s authenticated identity endpoint:</p>
+
+<p><strong>ClientApp/Controllers/IdentityController</strong>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-csharp" data-lang="csharp"> <span style="color:#66d9ef">private</span>
+<span style="color:#66d9ef">async</span> Task CallApiUsingUserAccessToken() { 
+    <span style="color:#66d9ef">var</span> accessToken = <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">HttpContext</span>.GetTokenAsync(<span style="color:#e6db74">&#34;access_token&#34;</span>);
+
+<span style="color:#66d9ef">var</span> client = <span style="color:#66d9ef">new</span> HttpClient();
+<span style="color:#a6e22e">client</span>.SetBearerToken(accessToken);
+
+<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">client</span>.GetAsync(<span style="color:#e6db74">&#34;http://localhost:5001/api/identity&#34;</span>);
+} </code></pre></div></p>
+
+<p>This gets the access_token from the HttpContext, which is provided by the
+authentication cookie that got set on successful user authentication. After
+that, the access token is set and send as a bearer token. This method is used by
+the IdentityController.Index action:</p>
+
+<p><strong>ClientApp/Controllers/IdentityController</strong>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-csharp" data-lang="csharp"><span style="color:#a6e22e"> [Authorize]</span> <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">async</span> Task Index() { <span style="color:#66d9ef">var</span>
+userClaimsVM = <span style="color:#66d9ef">new</span> UserClaimsVM(); <span style="color:#66d9ef">var</span> userClaimsWithClientCredentials = <span style="color:#66d9ef">await</span>
+GetUserClaimsFromApiWithClientCredentials();
+<span style="color:#a6e22e">userClaimsVM</span>.UserClaimsWithClientCredentials =
+<span style="color:#a6e22e">userClaimsWithClientCredentials</span>.IsSuccessStatusCode ? <span style="color:#66d9ef">await</span>
+<span style="color:#a6e22e">userClaimsWithClientCredentials</span>.<span style="color:#a6e22e">Content</span>.ReadAsStringAsync() :
+<span style="color:#a6e22e">userClaimsWithClientCredentials</span>.<span style="color:#a6e22e">StatusCode</span>.ToString();
+
+<span style="color:#66d9ef">var</span> userClaimsWithAccessToken = <span style="color:#66d9ef">await</span> CallApiUsingUserAccessToken();
+<span style="color:#a6e22e">userClaimsVM</span>.UserClaimsWithAccessToken = <span style="color:#a6e22e">userClaimsWithAccessToken</span>.IsSuccessStatusCode ? <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">userClaimsWithAccessToken</span>.<span style="color:#a6e22e">Content</span>.ReadAsStringAsync() : <span style="color:#a6e22e">userClaimsWithAccessToken</span>.<span style="color:#a6e22e">StatusCode</span>.ToString();
+
+<span style="color:#66d9ef">return</span> View(userClaimsVM);
+} </code></pre></div></p>
+
+<p>The user claims from the resource are stored in the <em>userClaimsVM</em> and the
+Identity/Index.cshtml should now look like this:</p>
+
+<p><strong>AppClient/Views/Identity/Index.cshtml</strong>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html"> 
+@model ClientApp.Models.UserClaimsVM;
+@{
+    ViewData[&#34;Title&#34;] = &#34;Index&#34;;
+}
+
+&lt;<span style="color:#f92672">h2</span>&gt;Index&lt;/<span style="color:#f92672">h2</span>&gt;
+
+&lt;<span style="color:#f92672">dl</span>&gt;
+    &lt;<span style="color:#f92672">dt</span>&gt;
+        UserClaimsWithClientCredentials
+    &lt;/<span style="color:#f92672">dt</span>&gt;
+    &lt;<span style="color:#f92672">dd</span>&gt;
+        @Model.UserClaimsWithClientCredentials
+    &lt;/<span style="color:#f92672">dd</span>&gt;
+    &lt;<span style="color:#f92672">dt</span>&gt;
+        UserClaimsWithAccessToken
+    &lt;/<span style="color:#f92672">dt</span>&gt;
+    &lt;<span style="color:#f92672">dd</span>&gt;
+        @Model.UserClaimsWithAccessToken
+    &lt;/<span style="color:#f92672">dd</span>&gt;
+&lt;/<span style="color:#f92672">dl</span>&gt;
+
+User claims:
+&lt;<span style="color:#f92672">dl</span>&gt;
+    @foreach (var claim in User.Claims)
+    {
+        &lt;<span style="color:#f92672">dt</span>&gt;@claim.Type&lt;/<span style="color:#f92672">dt</span>&gt;
+        &lt;<span style="color:#f92672">dd</span>&gt;@claim.Value&lt;/<span style="color:#f92672">dd</span>&gt;
+    }
+&lt;/<span style="color:#f92672">dl</span>&gt;
+
+&lt;<span style="color:#f92672">form</span> <span style="color:#a6e22e">asp-controller</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Identity&#34;</span> <span style="color:#a6e22e">asp-action</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Logout&#34;</span> <span style="color:#a6e22e">method</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;post&#34;</span>&gt;
+    &lt;<span style="color:#f92672">button</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;submit&#34;</span>&gt;Logout&lt;/<span style="color:#f92672">button</span>&gt;
+&lt;/<span style="color:#f92672">form</span>&gt;</code></pre></div></p>
+
+<p>Now the view is also showing user claims from the resource API using access token.</p>
+
+<p>No change is needed for the resource api, so we are now ready to run the
+servers together.</p>
+
+<h2 id="running-the-app">Running the app</h2>
+
+<p>When running the three servers all together we should be able to get an access token using the: <code>HttpContext.GetTokenAsync(&quot;access_token&quot;)</code>.</p>
+
+<p>By going to <a href="https://jwt.io/">https://jwt.io/</a>, this JWT can easily be decoded.</p>
+
+<p><img src="/images/openid-connect-part1/access-token.PNG" alt="OpenId access token" /></p>
+
+<p>We see that the scope is containing resourceApi as well as the audience
+property, allowing the user to access the ResourceApi.</p>
+
+<p>When going to <a href="http://localhost:5002/identity">http://localhost:5002/identity</a> we should now be prompted for login
+and consent for which we are gonna use one of the hard coded test users. Here
+after we are gonna be redirected to our identity view, now containing the user
+claims, fetched from the ResourceAPI:</p>
+
+<p><img src="/images/openid-connect/oidc-part4-identity-view.PNG" alt="OpenId identity view screenshot" /></p>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>That sums up part 4!
+We accomplished to setup an hybrid flow client in the Authorization Server that can return both a authorization code as well as id token and access token, if requested.
+Using this we obtained an access token containing the resource api as scope, which enabled our ClientApp to fetch and display authorized identity information by requesting the resource API.</p>
+
+<p>Next time we are gonna make the setup more realistic by enabling user registration using ASP.NET identity.<br />
+The code for this part can be found on my <a href="https://github.com/lydemann/oidc-angular-identityserver/tree/master/Solution%203%20-%20OIDC%20with%20Hybrid%20flow%20and%20call%20api">Github</a>.</p>
+
+                </section>
+            </article>
+
+            
+
+            
+                
+                    <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'blog-christianlydemann-com'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+                
+            
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+
+	
+	
+    <a class="symbol" href="https://github.com/lydemann">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Christian Lüdemann&#39;s blog
+    
+    </p>
+    <p class="small">
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://blog.christianlydemann.com/js/jquery-2.2.4.min.js"></script>
+<script src="https://blog.christianlydemann.com/js/main.js"></script>
+<script src="https://blog.christianlydemann.com/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-54304486-2', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+
+
+    </body>
+</html>

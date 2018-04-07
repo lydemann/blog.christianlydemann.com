@@ -8,7 +8,7 @@ Creating interactive authentication with an authorization code client (OIDC part
 
 
 In [part 2]() we created a simple OIDC setup using hard coded client credentials for the client to obtain an access token, so it could invoke the resource API.
-In this post, we are gonna enable interactive login on the identity server with hardcoded test users using authorization flow. After the users has successfully logged in, the requested scopes will be provided to the client app using the callback url. This will enable the client app to display the users claims on an authorized MVC view.
+In this post, we are gonna enable interactive login on the identity server with hard coded test users using authorization flow. After the users has successfully logged in, the requested scopes will be provided to the client app using the callback url. This will enable the client app to display the users claims on an authorized MVC view.
 
 To enable this, we will need to do some changes on the authorization server and client app:
 

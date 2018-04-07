@@ -6,10 +6,19 @@
     <description>Recent content in Posts on Christian Lüdemann&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Wed, 04 Apr 2018 06:26:55 +0200</lastBuildDate>
+    <lastBuildDate>Sat, 07 Apr 2018 18:23:09 +0200</lastBuildDate>
     
 	<atom:link href="https://blog.christianlydemann.com/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>OpenID Connect Hybrid Flow for calling client api (OIDC Part 4)</title>
+      <link>https://blog.christianlydemann.com/post/openid-connect-part4-hybrid-flow/</link>
+      <pubDate>Sat, 07 Apr 2018 18:23:09 +0200</pubDate>
+      
+      <guid>https://blog.christianlydemann.com/post/openid-connect-part4-hybrid-flow/</guid>
+      <description>Last post we created an authorization code client, enabling the client to get the user claims from the id token, exchanged for the post login authorization code. That way we were able to display the user roles on an authorized MVC view. This time, instead of getting the user roles from the userInfo endpoint directly with an access token from AppClient, we are going to get it from the resource API, using an access token.</description>
+    </item>
     
     <item>
       <title>OpenID Connect Interactive authentication with Authorization Code Flow (OIDC Part 3)</title>
@@ -18,7 +27,7 @@
       
       <guid>https://blog.christianlydemann.com/post/openid-connect-part3-authorization-code-flow/</guid>
       <description>Creating interactive authentication with an authorization code client (OIDC part 3)
-In [part 2]() we created a simple OIDC setup using hard coded client credentials for the client to obtain an access token, so it could invoke the resource API. In this post, we are gonna enable interactive login on the identity server with hardcoded test users using authorization flow. After the users has successfully logged in, the requested scopes will be provided to the client app using the callback url.</description>
+In [part 2]() we created a simple OIDC setup using hard coded client credentials for the client to obtain an access token, so it could invoke the resource API. In this post, we are gonna enable interactive login on the identity server with hard coded test users using authorization flow. After the users has successfully logged in, the requested scopes will be provided to the client app using the callback url.</description>
     </item>
     
     <item>

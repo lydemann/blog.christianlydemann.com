@@ -16,6 +16,19 @@ since we are only using an MVC client in this part. Using the hybrid client here
 is just for learning purpose, enabling you later to use the hybrid client both
 from a browser and a MVC app simultaneously.
 
+# The OpenID connect with IdentityServer4 and Angular series
+
+This series is learning you OpenID connect with Angular with these parts:
+
+- **[Part 1: Creating an OpenID connect system with Angular 5 and IdentityServer4]({{< relref "openid-connect-part1-openid-connect-overview.md" >}})**
+- **[Part 2: Creating identity server setup with client credential authentication]({{< relref "openid-connect-part2-client-credentials.md" >}})**
+- **[Part 3: Creating interactive authentication with an authorization code client]({{< relref "openid-connect-part3-authorization-code-flow.md" >}})**
+- **[Part 4: OpenID Connect Hybrid Flow for calling client api]({{< relref "openid-connect-part4-hybrid-flow.md" >}})** (this)
+- **Part 5: OpenID Connect with ASP.NET Identity (coming soon)**
+- **Part 6: OpenID Connect with Entity Framework for IdentityServer configuration (coming soon)**
+- **Part 7: OpenID Connect with Angular client (coming soon)**
+
+
 ## AuthorizationServer - Setting up the hybrid client
 
 Compared to part 3 of the OIDC series, the only thing we need to do to the

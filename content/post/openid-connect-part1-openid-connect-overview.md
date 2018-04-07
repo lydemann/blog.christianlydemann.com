@@ -9,6 +9,18 @@ OpenID connect authentication with dotnet core and Angular will demonstrate how 
 
 OpenID connect is a standard adding authentication (verifying the user’s identity) on top of OAUTH2, which is only for authorization (access control). OpenID connect adds authentication by introducing the notion of an ID token, which is is an JWT, providing a signed proof of authentication of the user.
 
+# The OpenID connect with IdentityServer4 and Angular series
+
+This series is learning you OpenID connect with Angular with these parts:
+
+- **[Part 1: Creating an OpenID connect system with Angular 5 and IdentityServer4]({{< relref "openid-connect-part1-openid-connect-overview.md" >}})** (this)
+- **[Part 2: Creating identity server setup with client credential authentication]({{< relref "openid-connect-part2-client-credentials.md" >}})**
+- **[Part 3: Creating interactive authentication with an authorization code client]({{< relref "openid-connect-part3-authorization-code-flow.md" >}})**
+- **[Part 4: OpenID Connect Hybrid Flow for calling client api]({{< relref "openid-connect-part4-hybrid-flow.md" >}})**
+- **Part 5: OpenID Connect with ASP.NET Identity (coming soon)**
+- **Part 6: OpenID Connect with Entity Framework for IdentityServer configuration (coming soon)**
+- **Part 7: OpenID Connect with Angular client (coming soon)**
+
 ## Why use OpenID Connect?
 
 1. OpenID connect is very useful for centralizing authentication and authorization in an infrastructure with many micro services, enabling single sign on for the user and for resource services to easily hook into the auth setup.

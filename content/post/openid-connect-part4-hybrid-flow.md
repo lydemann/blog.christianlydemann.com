@@ -1,6 +1,10 @@
 ---
 title: "OpenID Connect Hybrid Flow for calling resource API (OIDC Part 4)"
 date: 2018-04-07T18:23:09+02:00
+tags: ["OpenID Connect", "Identity Server", "Angular"]
+categories:
+- OpenID connect
+- IdentityServer4
 draft: false
 ---
 

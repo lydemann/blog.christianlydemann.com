@@ -1,6 +1,10 @@
 ---
 title: "Creating identity server setup with client credential authentication (OIDC part 2)"
 date: 2018-03-29T16:07:57+02:00
+tags: ["OpenID Connect", "Identity Server", "Angular"]
+categories:
+- OpenID connect
+- IdentityServer4
 draft: false
 ---
 

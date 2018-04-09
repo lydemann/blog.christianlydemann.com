@@ -6,10 +6,48 @@
     <description>Recent content in Identity Server on Christian Lüdemann&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Tue, 27 Mar 2018 10:13:20 +0200</lastBuildDate>
+    <lastBuildDate>Mon, 09 Apr 2018 18:22:12 +0200</lastBuildDate>
     
 	<atom:link href="https://blog.christianlydemann.com/tags/identity-server/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>OpenID Connect with IdentityServer and ASP.NET Core Identity (OIDC Part 5)</title>
+      <link>https://blog.christianlydemann.com/post/openid-connect-part5-identity/</link>
+      <pubDate>Mon, 09 Apr 2018 18:22:12 +0200</pubDate>
+      
+      <guid>https://blog.christianlydemann.com/post/openid-connect-part5-identity/</guid>
+      <description>Great that you made it this far! Now we are getting closer to what would be a “normal” scenario. Until now we have played around with authenticating with client credentials, authorization code flow, and hybrid flow - all with hardcoded test users. Of course, this would not work in a production setup, so we will in this post enable users to register and authenticate (log in) using ASP.NET Core Identity.</description>
+    </item>
+    
+    <item>
+      <title>OpenID Connect Hybrid Flow for calling resource API (OIDC Part 4)</title>
+      <link>https://blog.christianlydemann.com/post/openid-connect-part4-hybrid-flow/</link>
+      <pubDate>Sat, 07 Apr 2018 18:23:09 +0200</pubDate>
+      
+      <guid>https://blog.christianlydemann.com/post/openid-connect-part4-hybrid-flow/</guid>
+      <description>Last post we created an authorization code client, enabling the client to get the user claims from the id token, exchanged for the post login authorization code. That way we were able to display the user roles on an authorized MVC view. This time, instead of getting the user roles from the userInfo endpoint directly with an access token from AppClient, we are going to get it from the resource API, using an access token.</description>
+    </item>
+    
+    <item>
+      <title>OpenID Connect Interactive authentication with Authorization Code Flow (OIDC Part 3)</title>
+      <link>https://blog.christianlydemann.com/post/openid-connect-part3-authorization-code-flow/</link>
+      <pubDate>Wed, 04 Apr 2018 06:26:55 +0200</pubDate>
+      
+      <guid>https://blog.christianlydemann.com/post/openid-connect-part3-authorization-code-flow/</guid>
+      <description>Creating interactive authentication with an authorization code client (OIDC part 3)
+In [part 2]() we created a simple OIDC setup using hard coded client credentials for the client to obtain an access token, so it could invoke the resource API. In this post, we are gonna enable interactive login on the identity server with hard coded test users using authorization flow. After the users has successfully logged in, the requested scopes will be provided to the client app using the callback url.</description>
+    </item>
+    
+    <item>
+      <title>Creating identity server setup with client credential authentication (OIDC part 2)</title>
+      <link>https://blog.christianlydemann.com/post/openid-connect-part2-client-credentials/</link>
+      <pubDate>Thu, 29 Mar 2018 16:07:57 +0200</pubDate>
+      
+      <guid>https://blog.christianlydemann.com/post/openid-connect-part2-client-credentials/</guid>
+      <description>In this post we are gonna take part 1 into action by creating a OpenID connect setup with a three server system using client credentials for authentication The three servers are:
+ AuthorizationServer, implemented with IdentityServer4. ResourceApi, implemented with ASP.NET core and IdentityServer4.AccessTokenValidation Nuget package for access token validation. ClientApp, implemented as an ASP.NET MVC application with Angular using IdentityModel for getting access token.  The basic idea is that we register an in memory client and api resource on the AuthorizationServer, hardcode the client credentials in the ClientApp and exchanging these for an access token, which will grant the user access to an authorized endpoint on the ResourceApi.</description>
+    </item>
     
     <item>
       <title>Creating an OpenID connect system with Angular 5 and IdentityServer4 (OIDC part 1)</title>

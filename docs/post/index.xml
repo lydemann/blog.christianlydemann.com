@@ -6,10 +6,19 @@
     <description>Recent content in Posts on Christian Lüdemann&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sat, 07 Apr 2018 18:23:09 +0200</lastBuildDate>
+    <lastBuildDate>Mon, 09 Apr 2018 18:22:12 +0200</lastBuildDate>
     
 	<atom:link href="https://blog.christianlydemann.com/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>OpenID Connect with IdentityServer and ASP.NET Core Identity (OIDC Part 5)</title>
+      <link>https://blog.christianlydemann.com/post/openid-connect-part5-identity/</link>
+      <pubDate>Mon, 09 Apr 2018 18:22:12 +0200</pubDate>
+      
+      <guid>https://blog.christianlydemann.com/post/openid-connect-part5-identity/</guid>
+      <description>Great that you made it this far! Now we are getting closer to what would be a “normal” scenario. Until now we have played around with authenticating with client credentials, authorization code flow, and hybrid flow - all with hardcoded test users. Of course, this would not work in a production setup, so we will in this post enable users to register and authenticate (log in) using ASP.NET Core Identity.</description>
+    </item>
     
     <item>
       <title>OpenID Connect Hybrid Flow for calling resource API (OIDC Part 4)</title>

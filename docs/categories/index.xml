@@ -20,5 +20,23 @@
       <description></description>
     </item>
     
+    <item>
+      <title>Identityserver4</title>
+      <link>https://blog.christianlydemann.com/categories/identityserver4/</link>
+      <pubDate>Mon, 09 Apr 2018 18:22:12 +0200</pubDate>
+      
+      <guid>https://blog.christianlydemann.com/categories/identityserver4/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Openid Connect</title>
+      <link>https://blog.christianlydemann.com/categories/openid-connect/</link>
+      <pubDate>Mon, 09 Apr 2018 18:22:12 +0200</pubDate>
+      
+      <guid>https://blog.christianlydemann.com/categories/openid-connect/</guid>
+      <description></description>
+    </item>
+    
   </channel>
 </rss>

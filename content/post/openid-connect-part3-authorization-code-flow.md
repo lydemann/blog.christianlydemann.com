@@ -1,6 +1,10 @@
 ---
 title: "OpenID Connect Interactive authentication with Authorization Code Flow (OIDC Part 3)"
 date: 2018-04-04T06:26:55+02:00
+tags: ["OpenID Connect", "Identity Server", "Angular"]
+categories:
+- OpenID connect
+- IdentityServer4
 draft: false
 ---
 

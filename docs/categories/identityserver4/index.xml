@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Openid Connect on Christian Lüdemann&#39;s blog</title>
-    <link>https://blog.christianlydemann.com/tags/openid-connect/</link>
-    <description>Recent content in Openid Connect on Christian Lüdemann&#39;s blog</description>
+    <title>Identityserver4 on Christian Lüdemann&#39;s blog</title>
+    <link>https://blog.christianlydemann.com/categories/identityserver4/</link>
+    <description>Recent content in Identityserver4 on Christian Lüdemann&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <lastBuildDate>Mon, 09 Apr 2018 18:22:12 +0200</lastBuildDate>
     
-	<atom:link href="https://blog.christianlydemann.com/tags/openid-connect/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://blog.christianlydemann.com/categories/identityserver4/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>

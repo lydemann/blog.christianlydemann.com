@@ -1,0 +1,253 @@
+    <!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="author" content="Christian Lüdemann&#39;s blog">
+		<meta name="description" content="Technical blog">
+		<meta name="generator" content="Hugo 0.37" />
+		<title>OpenID Connect with IdentityServer and ASP.NET Core Identity (OIDC Part 5) &middot; Christian Lüdemann&#39;s blog</title>
+		<link rel="shortcut icon" href="https://blog.christianlydemann.com/images/favicon.ico">
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/style.css">
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/highlight.css">
+		
+
+		
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/font-awesome.min.css">
+		
+
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/monosocialiconsfont.css">
+		
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://blog.christianlydemann.com/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://blog.christianlydemann.com/post'>Posts</a>
+	<a href='https://blog.christianlydemann.com/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper">
+            <article class="post">
+                <header>
+                    <h1>
+                        OpenID Connect with IdentityServer and ASP.NET Core Identity (OIDC Part 5)
+                    </h1>
+                    <h2 class="headline">
+                    Apr 9, 2018 18:22
+                    · 787 words
+                    · 4 minutes read
+                      <span class="tags">
+                      
+                      
+                          
+                              <a href="https://blog.christianlydemann.com/tags/openid-connect">OpenID Connect</a>
+                          
+                              <a href="https://blog.christianlydemann.com/tags/identity-server">Identity Server</a>
+                          
+                              <a href="https://blog.christianlydemann.com/tags/angular">Angular</a>
+                          
+                      
+                      
+                      </span>
+                    </h2>
+                </header>
+                
+                <section id="post-body">
+                    
+
+<p>Great that you made it this far! Now we are getting closer to what would be a “normal” scenario. Until now we have played around with authenticating with client credentials, authorization code flow, and hybrid flow - all with hardcoded test users. Of course, this would not work in a production setup, so we will in this post enable users to register and authenticate (log in) using ASP.NET Core Identity.</p>
+
+<p>ASP.NET Core Identity is a Package for ASP.NET applications that bootstraps the app with support for managing users and easily save them in a database with Entity Framework and Identity middleware.</p>
+
+<p>In this post the client app will still use the hybrid flow client from last part, so we are only doing changes in the authorization server for this part. This part is implemented with inspiration from the official IdentityServer4 documentation <a href="https://identityserver4.readthedocs.io/en/release/quickstarts/6_aspnet_identity.html">here</a>.</p>
+
+<h1 id="the-openid-connect-with-identityserver4-and-angular-series">The OpenID connect with IdentityServer4 and Angular series</h1>
+
+<p>This series is learning you OpenID connect with Angular with these parts:</p>
+
+<ul>
+<li><strong><a href="/post/openid-connect-part1-openid-connect-overview/">Part 1: Creating an OpenID connect system with Angular 5 and IdentityServer4</a></strong></li>
+<li><strong><a href="/post/openid-connect-part2-client-credentials/">Part 2: Creating identity server setup with client credential authentication</a></strong></li>
+<li><strong><a href="/post/openid-connect-part3-authorization-code-flow/">Part 3: Creating interactive authentication with an authorization code client</a></strong></li>
+<li><strong><a href="/post/openid-connect-part4-hybrid-flow/">Part 4: OpenID Connect Hybrid Flow for calling resource API</a></strong></li>
+<li><strong><a href="/post/openid-connect-part5-identity/">Part 5: OpenID Connect with ASP.NET Identity</a></strong> (this)</li>
+<li><strong>Part 6: OpenID Connect with Entity Framework for IdentityServer configuration (coming soon)</strong></li>
+<li><strong>Part 7: OpenID Connect with Angular client (coming soon)</strong></li>
+</ul>
+
+<h1 id="authorization-server">Authorization Server</h1>
+
+<p>The easiest way to implement the authorization server for this part is to create a new project in Visual Studio 2017 with ASP.NET Core Identity already setup. To do this we first open Visual Studio 2017 and click New-&gt;project. We should now select an ASP.NET Core Web Application like this:</p>
+
+<p><img src="/images/openid-connect/select-aspnetcoreweb.png" alt="select-aspnetcoreweb" /></p>
+
+<p>Then we select &ldquo;Web Application (Model-View-Controller):</p>
+
+<p><img src="/images/openid-connect/select-mvc.png" alt="select-aspnetcoreweb" /></p>
+
+<p>We want to have it bootstrapped with Core Identity so we click &ldquo;choose Authentication&rdquo; and choose &ldquo;Individual User Accounts&rdquo;:</p>
+
+<p><img src="/images/openid-connect/select-authentication.png" alt="select-authentication" /></p>
+
+<p>Now we click next and this should set up a new MVC application with ASP.NET Identity. Remember to configure this to run on port 5000 like the old AuthorizationServer.</p>
+
+<h2 id="add-identity-packages">Add Identity packages</h2>
+
+<p>The first we need to do is installing Identity by going on NuGet and find the package called:<br />
+<code>IdentityServer4.AspNetIdentity</code></p>
+
+<p>This contains the <em>IdentityServer4</em> package, so we can run the IdentityServer middleware.</p>
+
+<h2 id="the-identityserver-client">The IdentityServer client</h2>
+
+<p>We are gonna use the same IdentityServer client with hybrid flow as we did in the last part, so feel free to copy the AuthorizationServer/Config.cs file to the new project.</p>
+
+<h2 id="setting-up-identityserver-middleware">Setting up IdentityServer middleware</h2>
+
+<p>Identity middleware is setup with:
+<strong>AuthorizationServer/Startup.cs</strong>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-csharp" data-lang="csharp"><span style="color:#a6e22e">services</span>.AddIdentity&lt;ApplicationUser, IdentityRole&gt;()
+              .AddEntityFrameworkStores&lt;ApplicationDbContext&gt;()
+              .AddDefaultTokenProviders();</code></pre></div>
+This sets up all the routes and controllers that enables user registration, login, logout etc.</p>
+
+<p>Now that Identity server middleware is setup we only need to hook Identity into the IdentityServer middleware with AddAspNetIdentity.
+The IdentityServer middleware chain should now look like this:</p>
+
+<p><strong>AuthorizationServer/Startup.cs</strong>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-csharp" data-lang="csharp"><span style="color:#a6e22e">services</span>.AddIdentityServer()
+              .AddDeveloperSigningCredential()
+              .AddInMemoryIdentityResources(<span style="color:#a6e22e">Config</span>.GetIdentityResources())
+              .AddInMemoryApiResources(<span style="color:#a6e22e">Config</span>.GetApiResources())
+              .AddInMemoryClients(<span style="color:#a6e22e">Config</span>.GetClients())
+              .AddAspNetIdentity&lt;ApplicationUser&gt;();</code></pre></div>
+The hardcoded test users have now been substituted by user data from the database.</p>
+
+<p>We are also gonna copy the Quickstart folder from the last part to the new project here as this gives us our registration, login and consent pages + controllers.</p>
+
+<h2 id="setting-up-the-database-for-identity">Setting up the database for Identity</h2>
+
+<p>For setting up persistence of users we are gonna add a new DbContext with Identity’s ApplicationDbContext and make it use SQL server:</p>
+
+<p><strong>AuthorizationServer/Startup.cs</strong>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-csharp" data-lang="csharp"><span style="color:#a6e22e">services</span>.AddDbContext&lt;ApplicationDbContext&gt;(options =&gt;
+    <span style="color:#a6e22e">options</span>.UseSqlServer(<span style="color:#a6e22e">Configuration</span>.GetConnectionString(<span style="color:#e6db74">&#34;DefaultConnection&#34;</span>)));</code></pre></div></p>
+
+<p>The AddDbContext<ApplicationDbContext> creates a new DB, configured with tables for user management, giving us a really good foundation for managing our users.</p>
+
+<p>The whole startup file should look like <a href="https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%204%20-%20OIDC%20with%20Identity/AuthorizationServer/Startup.cs">this</a>.</p>
+
+<p>To actually create the Identity tables we need to update the database with:<br />
+<code>dotnet ef database update</code></p>
+
+<p>This adds a new migration in the migration in the data folder of the AuthorizationServer project at <strong>AuthorizationServer/Data/</strong>:
+<img src="/images/openid-connect/identity-migrations.PNG" alt="Identity Migrations" /></p>
+
+<p>We can now see that the database is set up with Identity tables:</p>
+
+<p><img src="/images/openid-connect/identity-database-tables.PNG" alt="Identity Database" /></p>
+
+<h1 id="run-it">Run it</h1>
+
+<p>Business as usual here. We select the three project and make them all run together like before. We should now be able to go to <a href="http://localhost:5000/register">http://localhost:5000/register</a> and register users that can be authenticated by logging in with their credentials.</p>
+
+<p><img src="/images/openid-connect/register.PNG" alt="OIDC register" /></p>
+
+<p>When we go to <a href="localhost:5002/identity">localhost:5002/identity</a> we should now be redirected to the login page as before. If we click on register we can create a new user and hereafter login and give consent to that user&rsquo;s resources.</p>
+
+<p>And as before we should now be redirected to the Identity View showing our identity information:</p>
+
+<p><img src="/images/openid-connect/oidc-5-aspnet-identity-view.PNG" alt="ASP.NET Identity view" /></p>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>In this part we made the app more realistic by enabling dynamic registration of users instead of using hardcoded test users, using ASP.NET core Identity. This only required a few changes in the authorization server, so this shows how powerful the ASP.NET Core Identity package is.
+Next part we are gonna move the hardcoded configuration data into the Database and use this for dynamic configuration of the identity server.</p>
+
+                </section>
+            </article>
+
+            
+
+            
+                
+                    <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'blog-christianlydemann-com'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+                
+            
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+
+	
+	
+    <a class="symbol" href="https://github.com/lydemann">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Christian Lüdemann&#39;s blog
+    
+    </p>
+    <p class="small">
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://blog.christianlydemann.com/js/jquery-2.2.4.min.js"></script>
+<script src="https://blog.christianlydemann.com/js/main.js"></script>
+<script src="https://blog.christianlydemann.com/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-54304486-2', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+
+
+    </body>
+</html>

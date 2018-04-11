@@ -6,10 +6,19 @@
     <description>Recent content in Posts on Christian Lüdemann&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Mon, 09 Apr 2018 18:22:12 +0200</lastBuildDate>
+    <lastBuildDate>Wed, 11 Apr 2018 19:00:15 +0200</lastBuildDate>
     
 	<atom:link href="https://blog.christianlydemann.com/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Configure IdentityServer with Entity Framework (Part 6)</title>
+      <link>https://blog.christianlydemann.com/post/openid-connect-part6-ef-identityserver-config/</link>
+      <pubDate>Wed, 11 Apr 2018 19:00:15 +0200</pubDate>
+      
+      <guid>https://blog.christianlydemann.com/post/openid-connect-part6-ef-identityserver-config/</guid>
+      <description>In this post, we are going to build upon our IdentityServer setup with ASP.NET Core Identity for user management by moving the previously hardcoded IdentityServer configuration data to the database. This enables dynamic change of how IdentityServer is configured instead of needed a rebuild of the server for every configuration change. For this, we are gonna use Entity Framework and are going to write a seed script that takes the Config.</description>
+    </item>
     
     <item>
       <title>OpenID Connect with IdentityServer and ASP.NET Core Identity (OIDC Part 5)</title>

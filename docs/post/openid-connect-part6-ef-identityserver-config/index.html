@@ -1,0 +1,308 @@
+    <!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="author" content="Christian Lüdemann&#39;s blog">
+		<meta name="description" content="Technical blog">
+		<meta name="generator" content="Hugo 0.37" />
+		<title>Configure IdentityServer with Entity Framework (Part 6) &middot; Christian Lüdemann&#39;s blog</title>
+		<link rel="shortcut icon" href="https://blog.christianlydemann.com/images/favicon.ico">
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/style.css">
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/highlight.css">
+		
+
+		
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/font-awesome.min.css">
+		
+
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/monosocialiconsfont.css">
+		
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://blog.christianlydemann.com/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://blog.christianlydemann.com/post'>Posts</a>
+	<a href='https://blog.christianlydemann.com/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper">
+            <article class="post">
+                <header>
+                    <h1>
+                        Configure IdentityServer with Entity Framework (Part 6)
+                    </h1>
+                    <h2 class="headline">
+                    Apr 11, 2018 19:00
+                    · 767 words
+                    · 4 minutes read
+                      <span class="tags">
+                      
+                      </span>
+                    </h2>
+                </header>
+                
+                <section id="post-body">
+                    
+
+<p>In this post, we are going to build upon our IdentityServer setup with ASP.NET Core Identity for user management by moving the previously hardcoded IdentityServer configuration data to the database. This enables dynamic change of how IdentityServer is configured instead of needed a rebuild of the server for every configuration change. For this, we are gonna use Entity Framework and are going to write a seed script that takes the Config.cs configuration data and populates the database with it.
+As in the last post, this post only requires changes to the authorization server - the client app and the resource API stay the same.</p>
+
+<h1 id="the-openid-connect-with-identityserver4-and-angular-series">The OpenID connect with IdentityServer4 and Angular series</h1>
+
+<p>This series is learning you OpenID connect with Angular in these parts:</p>
+
+<ul>
+<li><a href="/post/openid-connect-part1-openid-connect-overview/">Part 1: Creating an OpenID connect system with Angular 5 and IdentityServer4</a></li>
+<li><a href="/post/openid-connect-part2-client-credentials/">Part 2: Creating identity server setup with client credential authentication</a></li>
+<li><a href="/post/openid-connect-part3-authorization-code-flow/">Part 3: Creating interactive authentication with an authorization code client</a></li>
+<li><a href="/post/openid-connect-part4-hybrid-flow/">Part 4: OpenID Connect Hybrid Flow for calling resource API</a></li>
+<li><a href="/post/openid-connect-part5-identity/">Part 5: OpenID Connect with ASP.NET Identity</a></li>
+<li><a href="/post/openid-connect-part6-ef-identityserver-config/">Part 6: OpenID Connect with Entity Framework for IdentityServer configuration</a> (this)</li>
+<li><strong>Part 7: OpenID Connect with Angular client (coming soon)</strong></li>
+</ul>
+
+<h2 id="authorizationserver-setup-identityserver-configuration-management-with-entity-framework">AuthorizationServer - Setup IdentityServer configuration management with Entity Framework</h2>
+
+<p>We are so fortunate that IdentityServer has a package on Nuget that gives us DbContexts, that we are using for creating the database for saving IdentityServer configuration data. We install the package on Nuget called:</p>
+
+<p><code>IdentityServer4.EntityFramework</code></p>
+
+<p>The database is updated with:</p>
+
+<p><code>dotnet ef migrations add InitConfigration -c ConfigurationDbContext -o Data/Migrations/IdentityServer/Configuration</code></p>
+
+<p><code>dotnet ef migrations add InitPersistedGrant -c PersistedGrantDbContext -o Data/Migrations/IdentityServer/PersistedGrant</code></p>
+
+<p>If the look at the SQL server explorer we can now see that we have created the following tables:</p>
+
+<p><img src="/images/openid-connect/oidc6-db-tables.PNG" alt="OIDC db tables" /></p>
+
+<p>This is where we persist OpenID connect configuration data such as ApiResources, claims, Clients and Grants etc.</p>
+
+<p>We are not gonna hardcode the configuration data anymore, so we will now delete the following middleware from the Startup.cs file in the AuthorizationServer project:</p>
+
+<p>AddInMemoryPersistedGrants
+AddInMemoryIdentityResources
+AddInMemoryApiResources
+AddInMemoryClients</p>
+
+<p>Using the AddConfigurationStore middleware we are going to setup the Startup.cs as:</p>
+
+<p><strong>AuthorizationServer/Startup.cs</strong></p>
+
+<pre><code class="language-csharp">           var migrationsAssembly = typeof(Startup).GetTypeInfo().Assembly.GetName().Name;
+           services.AddIdentityServer()
+               .AddDeveloperSigningCredential()
+               .AddAspNetIdentity&lt;ApplicationUser&gt;()
+               .AddConfigurationStore(options =&gt;
+               {
+                   options.ConfigureDbContext = builder =&gt;
+                       builder.UseSqlServer(Configuration.GetConnectionString(&quot;DefaultConnection&quot;),
+                           db =&gt; db.MigrationsAssembly(migrationsAssembly));
+               })
+               .AddOperationalStore(options =&gt;
+               {
+                   options.ConfigureDbContext = builder =&gt;
+                       builder.UseSqlServer(Configuration.GetConnectionString(&quot;DefaultConnection&quot;),
+                           db =&gt; db.MigrationsAssembly(migrationsAssembly));
+               });
+</code></pre>
+
+<p>Here we are setting up an Configuration store with AddConfigurationStore and an OpertionalStore with AddOperationalStore. This works by only providing it with the SqlServer connection string and the migrationsassembly.</p>
+
+<p>Notice that we need to provide the assemblyName for it to locate the migrations assembly. With this, we setup IdentityServer to lookup configuration data in the database.</p>
+
+<p>The IdentityServer config data is now loaded from the Config.cs file into the database with a seed script:</p>
+
+<p><strong>Data/SeedData.cs</strong></p>
+
+<pre><code class="language-csharp">   public class SeedData
+   {
+       public static void EnsureSeedData(IServiceProvider serviceProvider)
+       {
+           Console.WriteLine(&quot;Seeding database...&quot;);
+           PerformMigrations(serviceProvider);
+
+           EnsureSeedData(serviceProvider.GetRequiredService&lt;ConfigurationDbContext&gt;());
+           Console.WriteLine(&quot;Done seeding database.&quot;);
+       }
+
+       private static void PerformMigrations(IServiceProvider serviceProvider)
+       {
+           serviceProvider.GetRequiredService&lt;ApplicationDbContext&gt;().Database.Migrate();
+           serviceProvider.GetRequiredService&lt;ConfigurationDbContext&gt;().Database.Migrate();
+           serviceProvider.GetRequiredService&lt;PersistedGrantDbContext&gt;().Database.Migrate();
+       }
+
+       private static void EnsureSeedData(ConfigurationDbContext context)
+       {
+           if (!context.Clients.Any())
+           {
+               Console.WriteLine(&quot;Clients being populated&quot;);
+               foreach (var client in Config.GetClients().ToList())
+               {
+                   context.Clients.Add(client.ToEntity());
+               }
+               context.SaveChanges();
+           }
+           else
+           {
+               Console.WriteLine(&quot;Clients already populated&quot;);
+           }
+
+           if (!context.IdentityResources.Any())
+           {
+               Console.WriteLine(&quot;IdentityResources being populated&quot;);
+               foreach (var resource in Config.GetIdentityResources().ToList())
+               {
+                   context.IdentityResources.Add(resource.ToEntity());
+               }
+               context.SaveChanges();
+           }
+           else
+           {
+               Console.WriteLine(&quot;IdentityResources already populated&quot;);
+           }
+
+           if (!context.ApiResources.Any())
+           {
+               Console.WriteLine(&quot;ApiResources being populated&quot;);
+               foreach (var resource in Config.GetApiResources().ToList())
+               {
+                   context.ApiResources.Add(resource.ToEntity());
+               }
+               context.SaveChanges();
+           }
+           else
+           {
+               Console.WriteLine(&quot;ApiResources already populated&quot;);
+           }
+       }
+   }
+</code></pre>
+
+<p>This seed script is called from program.cs with:</p>
+
+<p>and adds or updates the configuration data in the database when the AuthorizationServer is run.</p>
+
+<p><strong><a href="https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%205%20-%20OIDC%20with%20EF%20for%20configuration/AuthorizationServer/Program.cs">AuthorizationServer/Program.cs</a></strong>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-csharp" data-lang="csharp">...
+<span style="color:#66d9ef">using</span> (<span style="color:#66d9ef">var</span> scope = <span style="color:#a6e22e">host</span>.<span style="color:#a6e22e">Services</span>.CreateScope())
+{
+    <span style="color:#66d9ef">var</span> services = <span style="color:#a6e22e">scope</span>.ServiceProvider;
+
+    <span style="color:#66d9ef">try</span>
+    {
+        <span style="color:#a6e22e">SeedData</span>.EnsureSeedData(services);
+
+    }
+    <span style="color:#66d9ef">catch</span> (Exception ex)
+    {
+        <span style="color:#66d9ef">var</span> logger = <span style="color:#a6e22e">services</span>.GetRequiredService&lt;ILogger&lt;Program&gt;&gt;();
+        <span style="color:#a6e22e">logger</span>.LogError(ex, <span style="color:#e6db74">&#34;An error occurred while migrating and seeding the database.&#34;</span>);
+    }
+}
+...</code></pre></div></p>
+
+<h1 id="running-it-all">Running it all</h1>
+
+<p>As usual, we can select the AuthorizationServer, AppClient, and ResourceAPI and run them in Visual Studio. The app should run like before, except we can change configuration data dynamically now by changing the database tables containing the IdentityServer configuration data. On the first run we run our seed methods that run our migrations and seed our tables with the IdentityServer configuration data.</p>
+
+<p>For example we can see our client now in the Clients table:</p>
+
+<p><img src="/images/openid-connect/oidc6-db-clients.PNG" alt="OpenID Connect database clients" /></p>
+
+<h1 id="wrapping-up">Wrapping up</h1>
+
+<p>In this post, we made the IdentityServer configuration dynamic by using the IdentityServer Entity Framework library to store OpenID connect configuration data in the database. This created new tables for storing the IdentityServer configuration data and we seeded these with a seed script, running upon start.</p>
+
+<p>In the next post, we are going to implement the whole setup with Angular application in AppClient, using an implicit flow client on the Authorization server and being able to access authorized data from ResourceApi.</p>
+
+                </section>
+            </article>
+
+            
+
+            
+                
+                    <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'blog-christianlydemann-com'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+                
+            
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+
+	
+	
+    <a class="symbol" href="https://github.com/lydemann">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Christian Lüdemann&#39;s blog
+    
+    </p>
+    <p class="small">
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://blog.christianlydemann.com/js/jquery-2.2.4.min.js"></script>
+<script src="https://blog.christianlydemann.com/js/main.js"></script>
+<script src="https://blog.christianlydemann.com/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-54304486-2', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+
+
+    </body>
+</html>

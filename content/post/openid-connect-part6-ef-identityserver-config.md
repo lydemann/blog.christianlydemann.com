@@ -1,5 +1,5 @@
 ---
-title: "Configure IdentityServer with Entity Framework (Part 6)"
+title: "Configure IdentityServer with Entity Framework ( OIDC Part 6)"
 date: 2018-04-11T19:00:15+02:00
 draft: false
 ---

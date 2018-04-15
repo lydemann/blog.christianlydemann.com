@@ -10,8 +10,8 @@ In this part, we are gonna implement the Angular app on the client app to use an
 
 In the first part, I wrote about the security concerns of Implicit flow and how to mitigate them, and Angular is beneficial for this purpose in the following ways:
 
-- Build in XSS protection (if not doing manual dom manipulation, which is an Angular anti pattern anyways).
-- Officiel OpenID connect approved implementations of the OIDC standard for the client according to the specification. It is more error-prone to implement the OpenID connect standard ourselves, with stuff like token validation, implementing validation rules etc.
+- Build in XSS protection (if not doing manual dom manipulation, which is an Angular anti-pattern anyway).
+- Official OpenID connect approved implementations of the OIDC standard for the client according to the specification. It is more error-prone to implement the OpenID connect standard ourselves, with stuff like token validation, implementing validation rules etc.
 
 
 # AuthorizationServer
@@ -170,7 +170,7 @@ I like type safety, so I use a little trick, where I map the configuration to a 
             services.AddSingleton(appSettings);
 {{< /highlight >}}
 
-Now the app settings can be injected and used as a viewmodel in the Index view:
+Now the app settings can be injected and used as a view model in the Index view:
 
 {{< highlight csharp >}}
         public AppSettings AppSettings { get; }
@@ -235,7 +235,7 @@ export default createServerRenderer(params => {
 });
 {{< /highlight >}}
 
-Now these settings is taken from window and set up as a provider:
+Now, these settings are taken from window and set up as a provider:
 
 [**AppClient/AppClient/app/app.browser.module.ts**](https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ClientApp/ClientApp/app/app.browser.module.ts)
 {{< highlight javascript >}}
@@ -269,7 +269,7 @@ export function authUrlFactory() {
 
 ## Setup the Angular app for OIDC
 
-We setup OpenID connect in the Angular with the specification approved library called **angular-auth-oidc-client**. This gives us an easy abstraction to use in our Angular application that implements the validation rules according to the OpenID connect specification.
+We set up OpenID connect in the Angular with the specification approved library called **angular-auth-oidc-client**. This gives us an easy abstraction to use in our Angular application that implements the validation rules according to the OpenID connect specification.
 
 We install this using:
 ``npm I angular-auth-oidc-client``
@@ -356,7 +356,7 @@ We create methods for doing HTTP calls that set the Authorization header with th
     }
 {{< /highlight >}}
 
-We create login and logout methods:
+We create a login and logout methods:
 
 [**ClientApp/ClientApp/app/components/core/auth.service.ts**](https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ClientApp/ClientApp/app/components/core/auth.service.ts)
 {{< highlight javascript >}}

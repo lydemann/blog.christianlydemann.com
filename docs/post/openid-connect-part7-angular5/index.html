@@ -1,0 +1,638 @@
+    <!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="author" content="Christian Lüdemann&#39;s blog">
+		<meta name="description" content="Technical blog">
+		<meta name="generator" content="Hugo 0.37" />
+		<title>OpenID Connect with Angular 5 (OIDC Part 7) &middot; Christian Lüdemann&#39;s blog</title>
+		<link rel="shortcut icon" href="https://blog.christianlydemann.com/images/favicon.ico">
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/style.css">
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/highlight.css">
+		
+
+		
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/font-awesome.min.css">
+		
+
+		<link rel="stylesheet" href="https://blog.christianlydemann.com/css/monosocialiconsfont.css">
+		
+
+		
+	</head>
+
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://blog.christianlydemann.com/'> <span class="arrow">←</span>Home</a>
+	
+	<a href='https://blog.christianlydemann.com/post'>Posts</a>
+	<a href='https://blog.christianlydemann.com/about'>About</a>
+
+	
+</nav>
+
+
+        <section id="wrapper">
+            <article class="post">
+                <header>
+                    <h1>
+                        OpenID Connect with Angular 5 (OIDC Part 7)
+                    </h1>
+                    <h2 class="headline">
+                    Apr 12, 2018 21:54
+                    · 2176 words
+                    · 11 minutes read
+                      <span class="tags">
+                      
+                      </span>
+                    </h2>
+                </header>
+                
+                <section id="post-body">
+                    
+
+<p>Now we are getting somewhere, huh!? So far we have played around with the authorization code, hybrid and client credentials flow to get a grasp of when to use what. We have made the authorization server interactive and dynamic by saving user data and IdentityServer data in the database.</p>
+
+<p>In this part, we are gonna implement the Angular app on the client app to use an implicit flow client for authenticating and calling an authorized endpoint on the resource API. As spoken about in the first part, we are using implicit flow here because we are using an Angular app, which runs in the browser and can’t keep a client secret that is needed if we wanted to use authorization code.</p>
+
+<p>In the first part, I wrote about the security concerns of Implicit flow and how to mitigate them, and Angular is beneficial for this purpose in the following ways:</p>
+
+<ul>
+<li>Built in XSS protection (if not doing manual dom manipulation, which is an Angular anti-pattern anyway).</li>
+<li>Official OpenID connect approved implementations of the specification. It is more error-prone to implement the OpenID connect standard ourselves, with stuff like token validation, implementing validation rules etc.</li>
+</ul>
+
+<h1 id="the-openid-connect-with-identityserver4-and-angular-series">The OpenID connect with IdentityServer4 and Angular series</h1>
+
+<p>This series is learning you OpenID connect with Angular in these parts:</p>
+
+<ul>
+<li><a href="/post/openid-connect-part1-openid-connect-overview/">Part 1: Creating an OpenID connect system with Angular 5 and IdentityServer4</a></li>
+<li><a href="/post/openid-connect-part2-client-credentials/">Part 2: Creating identity server setup with client credential authentication</a></li>
+<li><a href="/post/openid-connect-part3-authorization-code-flow/">Part 3: Creating interactive authentication with an authorization code client</a></li>
+<li><a href="/post/openid-connect-part4-hybrid-flow/">Part 4: OpenID Connect Hybrid Flow for calling resource API</a></li>
+<li><a href="/post/openid-connect-part5-identity/">Part 5: OpenID Connect with ASP.NET Identity</a></li>
+<li><a href="/post/openid-connect-part6-ef-identityserver-config/">Part 6: OpenID Connect with Entity Framework for IdentityServer configuration</a></li>
+<li><a href="/post/openid-connect-part7-angular5/">Part 7: OpenID Connect with Angular client</a> (this)</li>
+</ul>
+
+<h1 id="authorizationserver">AuthorizationServer</h1>
+
+<p>For this part, the authorization server needs an implicit flow client for the Angular application.</p>
+
+<h2 id="setup-implicit-grant-client-for-angular-app">Setup implicit grant client for Angular app</h2>
+
+<p>We go to the Config.cs file and add the following client to the AuthorizationServer’s Config.cs:</p>
+
+<p><strong>AuthorizationServer/Config.cs</strong>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-csharp" data-lang="csharp"><span style="color:#66d9ef">new</span> Client
+{
+   ClientId = <span style="color:#e6db74">&#34;spaClient&#34;</span>,
+   ClientName = <span style="color:#e6db74">&#34;SPA Client&#34;</span>,
+   AllowedGrantTypes = <span style="color:#a6e22e">GrantTypes</span>.Implicit,
+   AllowAccessTokensViaBrowser = <span style="color:#66d9ef">true</span>,
+
+   RedirectUris = { <span style="color:#e6db74">&#34;http://localhost:5002/callback&#34;</span> },
+   PostLogoutRedirectUris = { <span style="color:#e6db74">&#34;http://localhost:5002/home&#34;</span> },
+   AllowedCorsOrigins = { <span style="color:#e6db74">&#34;http://localhost:5002&#34;</span> },
+   AllowedScopes =
+   {
+       <span style="color:#a6e22e">IdentityServerConstants</span>.<span style="color:#a6e22e">StandardScopes</span>.OpenId,
+       <span style="color:#a6e22e">IdentityServerConstants</span>.<span style="color:#a6e22e">StandardScopes</span>.Profile,
+       <span style="color:#e6db74">&#34;resourceApi&#34;</span>
+   }
+}</code></pre></div></p>
+
+<p>Here we are creating a client for single page applications (SPAs) like Angular. This is using implicit grant type and is allowed to reveal the access token to a browser. As usual, it also specifies the redirect URLs and the scopes contained in the access token.</p>
+
+<p>Remember, in the previous part we set up dynamic configuration with Entity Framework, containing a seed method reading this Config.cs file for populating the database if not already populated. If your database is already populated from the previous part, remember to delete it to get it seeded with this new client.</p>
+
+<h1 id="resource-api">Resource API</h1>
+
+<p>Setup an authorized controller with a method providing weather data to the client application.</p>
+
+<p><a href="https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ResourceApi/Controllers/SampleDataController.cs"><strong>ResourceApi/Controllers/SampleDataController.cs</strong></a></p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-csharp" data-lang="csharp"><span style="color:#a6e22e">[Route(&#34;api/[controller]</span><span style="color:#e6db74">&#34;)]
+</span><span style="color:#e6db74"></span><span style="color:#a6e22e">[Authorize]</span>
+<span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">SampleDataController</span> : Controller
+{
+   <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">string</span><span style="color:#a6e22e">[]</span> Summaries = <span style="color:#66d9ef">new</span><span style="color:#a6e22e">[]</span>
+   {
+       <span style="color:#e6db74">&#34;Freezing&#34;</span>, <span style="color:#e6db74">&#34;Bracing&#34;</span>, <span style="color:#e6db74">&#34;Chilly&#34;</span>, <span style="color:#e6db74">&#34;Cool&#34;</span>, <span style="color:#e6db74">&#34;Mild&#34;</span>, <span style="color:#e6db74">&#34;Warm&#34;</span>, <span style="color:#e6db74">&#34;Balmy&#34;</span>, <span style="color:#e6db74">&#34;Hot&#34;</span>, <span style="color:#e6db74">&#34;Sweltering&#34;</span>, <span style="color:#e6db74">&#34;Scorching&#34;</span>
+   };<span style="color:#a6e22e">
+</span><span style="color:#a6e22e">
+</span><span style="color:#a6e22e">   [HttpGet(&#34;WeatherForecasts&#34;)]</span>
+   <span style="color:#66d9ef">public</span> IEnumerable&lt;WeatherForecast&gt; WeatherForecasts()
+   {
+       <span style="color:#66d9ef">var</span> rng = <span style="color:#66d9ef">new</span> Random();
+       <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">Enumerable</span>.Range(<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">5</span>).Select(index =&gt; <span style="color:#66d9ef">new</span> WeatherForecast
+       {
+           DateFormatted = <span style="color:#a6e22e">DateTime</span>.<span style="color:#a6e22e">Now</span>.AddDays(index).ToString(<span style="color:#e6db74">&#34;d&#34;</span>),
+           TemperatureC = <span style="color:#a6e22e">rng</span>.Next(-<span style="color:#ae81ff">20</span>, <span style="color:#ae81ff">55</span>),
+           Summary = Summaries<span style="color:#a6e22e">[rng.Next(Summaries.Length)]</span>
+       });
+   }
+
+   <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">WeatherForecast</span>
+   {
+       <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">string</span> DateFormatted { <span style="color:#66d9ef">get</span>; <span style="color:#66d9ef">set</span>; }
+       <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> TemperatureC { <span style="color:#66d9ef">get</span>; <span style="color:#66d9ef">set</span>; }
+       <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">string</span> Summary { <span style="color:#66d9ef">get</span>; <span style="color:#66d9ef">set</span>; }
+
+       <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> TemperatureF
+       {
+           <span style="color:#66d9ef">get</span>
+           {
+               <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">32</span> + (<span style="color:#66d9ef">int</span>)(TemperatureC / <span style="color:#ae81ff">0.5556</span>);
+           }
+       }
+   }
+}</code></pre></div>
+
+<p>This controller is created by simply copying the existing weather endpoint from the app client and adding the authorized attribute.</p>
+
+<h2 id="configure-startup-cs-for-a-browser-client">Configure Startup.cs for a browser client</h2>
+
+<p>The client app is doing a cross origin request when requesting the resource API, so we need to enable CORS in Startup.cs with the CORS middleware:</p>
+
+<p><a href="https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ResourceApi/Startup.cs"><strong>ResourceApi/Startup.cs</strong></a>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-csharp" data-lang="csharp"><span style="color:#a6e22e">services</span>.AddCors(options =&gt;
+{
+    <span style="color:#a6e22e">options</span>.AddPolicy(<span style="color:#e6db74">&#34;default&#34;</span>, policy =&gt;
+    {
+        <span style="color:#a6e22e">policy</span>.WithOrigins(Configuration<span style="color:#a6e22e">[&#34;clientUrl&#34;]</span>)
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});</code></pre></div></p>
+
+<p>Now we are ready to connect our app to this endpoint.</p>
+
+<h1 id="clientapp">ClientApp</h1>
+
+<p>For the client app we need to first update to Angular 5 and hereafter create an app showing weather data by calling the authorized endpoint on the resource API.</p>
+
+<h2 id="setup-angular-app-with-angular-5">Setup Angular app with Angular 5</h2>
+
+<p>ASP.NET Core has built-in support for Angular apps. In part 2 we scaffolded ClientApp as an ASP.NET application with Angular, setting it up with Angular 4. Angular 4 is so last week, so we are going to upgrade that to Angular 5, but we need to change a few things:</p>
+
+<ul>
+<li>The node_modules should be removed and be reinstalled with all @angular packages being updated to Angular 5 and use at least rxjs version 5.5*.</li>
+<li>Update Webpack to use the AngularCompilerPlugin instead of the now deprecated AotPlugin. After this update, the vendor and app bundles should be rebuild and replace the old ones.</li>
+</ul>
+
+<h3 id="update-to-angular-5">Update to Angular 5</h3>
+
+<p>First we remove the node_modules folder and replace your npm dependencies with the following:
+<a href="https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ClientApp/package.json"><strong>ClientApp/package.json</strong></a>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"> <span style="color:#e6db74">&#34;devDependencies&#34;</span><span style="color:#f92672">:</span> {
+   <span style="color:#e6db74">&#34;@ngtools/webpack&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;^6.0.0-beta.7&#34;</span>,
+   <span style="color:#e6db74">&#34;@types/chai&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;4.0.1&#34;</span>,
+   <span style="color:#e6db74">&#34;@types/jasmine&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;2.5.53&#34;</span>,
+   <span style="color:#e6db74">&#34;@types/webpack-env&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;1.13.0&#34;</span>,
+   <span style="color:#e6db74">&#34;angular2-router-loader&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;0.3.5&#34;</span>,
+   <span style="color:#e6db74">&#34;angular2-template-loader&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;0.6.2&#34;</span>,
+   <span style="color:#e6db74">&#34;aspnet-prerendering&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;^3.0.1&#34;</span>,
+   <span style="color:#e6db74">&#34;aspnet-webpack&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;^2.0.1&#34;</span>,
+   <span style="color:#e6db74">&#34;awesome-typescript-loader&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;3.2.1&#34;</span>,
+   <span style="color:#e6db74">&#34;bootstrap&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;3.3.7&#34;</span>,
+   <span style="color:#e6db74">&#34;chai&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;4.0.2&#34;</span>,
+   <span style="color:#e6db74">&#34;css&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;2.2.1&#34;</span>,
+   <span style="color:#e6db74">&#34;css-loader&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;0.28.4&#34;</span>,
+   <span style="color:#e6db74">&#34;es6-shim&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;0.35.3&#34;</span>,
+   <span style="color:#e6db74">&#34;event-source-polyfill&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;0.0.9&#34;</span>,
+   <span style="color:#e6db74">&#34;expose-loader&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;0.7.3&#34;</span>,
+   <span style="color:#e6db74">&#34;extract-text-webpack-plugin&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;2.1.2&#34;</span>,
+   <span style="color:#e6db74">&#34;file-loader&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;0.11.2&#34;</span>,
+   <span style="color:#e6db74">&#34;html-loader&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;0.4.5&#34;</span>,
+   <span style="color:#e6db74">&#34;isomorphic-fetch&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;2.2.1&#34;</span>,
+   <span style="color:#e6db74">&#34;jasmine-core&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;2.6.4&#34;</span>,
+   <span style="color:#e6db74">&#34;jquery&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;3.2.1&#34;</span>,
+   <span style="color:#e6db74">&#34;json-loader&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;0.5.4&#34;</span>,
+   <span style="color:#e6db74">&#34;karma&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;1.7.0&#34;</span>,
+   <span style="color:#e6db74">&#34;karma-chai&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;0.1.0&#34;</span>,
+   <span style="color:#e6db74">&#34;karma-chrome-launcher&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;2.2.0&#34;</span>,
+   <span style="color:#e6db74">&#34;karma-cli&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;1.0.1&#34;</span>,
+   <span style="color:#e6db74">&#34;karma-jasmine&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;1.1.0&#34;</span>,
+   <span style="color:#e6db74">&#34;karma-webpack&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;2.0.3&#34;</span>,
+   <span style="color:#e6db74">&#34;preboot&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;4.5.2&#34;</span>,
+   <span style="color:#e6db74">&#34;raw-loader&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;0.5.1&#34;</span>,
+   <span style="color:#e6db74">&#34;reflect-metadata&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;0.1.10&#34;</span>,
+   <span style="color:#e6db74">&#34;rimraf&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;^2.6.2&#34;</span>,
+   <span style="color:#e6db74">&#34;style-loader&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;0.18.2&#34;</span>,
+   <span style="color:#e6db74">&#34;to-string-loader&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;1.1.5&#34;</span>,
+   <span style="color:#e6db74">&#34;typescript&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;^2.8.1&#34;</span>,
+   <span style="color:#e6db74">&#34;url-loader&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;0.5.9&#34;</span>,
+   <span style="color:#e6db74">&#34;webpack&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;2.5.1&#34;</span>,
+   <span style="color:#e6db74">&#34;webpack-hot-middleware&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;2.18.2&#34;</span>,
+   <span style="color:#e6db74">&#34;webpack-merge&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;4.1.0&#34;</span>,
+   <span style="color:#e6db74">&#34;zone.js&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;0.8.12&#34;</span>
+ },
+ <span style="color:#e6db74">&#34;dependencies&#34;</span><span style="color:#f92672">:</span> {
+   <span style="color:#e6db74">&#34;@angular/animations&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;^5.2.9&#34;</span>,
+   <span style="color:#e6db74">&#34;@angular/common&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;^5.2.9&#34;</span>,
+   <span style="color:#e6db74">&#34;@angular/compiler&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;^5.2.9&#34;</span>,
+   <span style="color:#e6db74">&#34;@angular/compiler-cli&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;^5.2.9&#34;</span>,
+   <span style="color:#e6db74">&#34;@angular/cli&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;^1.7.3&#34;</span>,
+   <span style="color:#e6db74">&#34;@angular/core&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;^5.2.9&#34;</span>,
+   <span style="color:#e6db74">&#34;@angular/forms&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;^5.2.9&#34;</span>,
+   <span style="color:#e6db74">&#34;@angular/http&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;^5.2.9&#34;</span>,
+   <span style="color:#e6db74">&#34;@angular/platform-browser&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;^5.2.9&#34;</span>,
+   <span style="color:#e6db74">&#34;@angular/platform-browser-dynamic&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;^5.2.9&#34;</span>,
+   <span style="color:#e6db74">&#34;@angular/platform-server&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;^5.2.9&#34;</span>,
+   <span style="color:#e6db74">&#34;@angular/router&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;^5.2.9&#34;</span>,
+   <span style="color:#e6db74">&#34;angular-auth-oidc-client&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;^4.1.0&#34;</span>,
+   <span style="color:#e6db74">&#34;rxjs&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;^5.5.2&#34;</span>
+ }
+</code></pre></div></p>
+
+<p>After this do a:<br />
+<code>npm i</code></p>
+
+<p>What has changed here is we have installed the Angular 5 libraries and updated dependencies like <em>rxjs</em> accordingly.</p>
+
+<h3 id="update-webpack-to-use-angularcompilerplugin">Update webpack to use AngularCompilerPlugin</h3>
+
+<p>In Angular 5, ahead of time compilation is default, so the Webpack config file should use AngularCompilerPlugin instead of AotPlugin:</p>
+
+<p><a href="https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ClientApp/webpack.config.js"><strong>ClientApp/webpack.config.js</strong></a>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript">...
+<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">AotPlugin</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;@ngtools/webpack&#39;</span>).<span style="color:#a6e22e">AngularCompilerPlugin</span>;
+...
+</code></pre></div></p>
+
+<p>After this we delete the &ldquo;ClientApp/wwwroot/dist&rdquo; folder and rebuild it by opening the terminal at the ClientApp project and run the following command:</p>
+
+<p><code>npm run build</code></p>
+
+<h2 id="inject-appsettings-into-the-angular-app">Inject AppSettings into the Angular app:</h2>
+
+<p>Doing server-side rendering enables us to inject environment variables into the Angular app at runtime instead of needing a separate build for each environment (the Angular CLI way).</p>
+
+<p>This way the server and client can also share the same configuration values.
+We setup the environment variables in the AppSettings.json file like this:</p>
+
+<p><a href="https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ClientApp/appsettings.json"><strong>ClientApp/AppSettings.json</strong></a>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript">{
+   <span style="color:#e6db74">&#34;Logging&#34;</span><span style="color:#f92672">:</span> {
+       <span style="color:#e6db74">&#34;LogLevel&#34;</span><span style="color:#f92672">:</span> {
+           <span style="color:#e6db74">&#34;Default&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;Warning&#34;</span>
+       }
+   },
+   <span style="color:#e6db74">&#34;ApiUrl&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;http://localhost:5001&#34;</span>,
+   <span style="color:#e6db74">&#34;AuthUrl&#34;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;http://localhost:5000&#34;</span>
+}
+</code></pre></div></p>
+
+<p>I like type safety, so I use a little trick, where I map the configuration to a typed configuration class and register it in the ASP.NET Core IoC:</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-csharp" data-lang="csharp"><span style="color:#66d9ef">var</span> appSettings = <span style="color:#66d9ef">new</span> AppSettings();
+<span style="color:#a6e22e">Configuration</span>.Bind(appSettings);
+<span style="color:#a6e22e">services</span>.AddSingleton(appSettings);</code></pre></div>
+
+<p>Now the app settings can be injected and used as a view model in the Index view:</p>
+
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-csharp" data-lang="csharp"><span style="color:#66d9ef">public</span> AppSettings AppSettings { <span style="color:#66d9ef">get</span>; }
+
+<span style="color:#66d9ef">public</span> HomeController(AppSettings appSettings)
+{
+    AppSettings = appSettings;
+}
+
+<span style="color:#66d9ef">public</span> IActionResult Index()
+{
+    <span style="color:#66d9ef">return</span> View(AppSettings);
+}</code></pre></div>
+
+<p>The app settings get passed through the index view model into the view and injected into the Angular app by setting it as the prerender data:</p>
+
+<p><a href="https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ClientApp/Views/Home/Index.cshtml"><strong>ClientApp/Views/Home/Index.cshtml</strong></a>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">&lt;<span style="color:#f92672">app</span> <span style="color:#a6e22e">asp-prerender-module</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;ClientApp/dist/main-server&#34;</span>
+    <span style="color:#a6e22e">asp-prerender-data</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#39;new {
+</span><span style="color:#e6db74">       apiUrl = Model.ApiUrl,
+</span><span style="color:#e6db74">       authUrl = Model.AuthUrl
+</span><span style="color:#e6db74">     }&#39;</span>&gt;Loading...&lt;/<span style="color:#f92672">app</span>&gt;</code></pre></div></p>
+
+<p>This makes the data available inside the Angular applications server boot method. From here we can pass the app settings data as &ldquo;globals&rdquo;, getting the settings set in the global window variable:</p>
+
+<p><a href="https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ClientApp/ClientApp/boot.server.ts"><strong>ClientApp/ClientApp/boot.server.ts</strong></a>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> <span style="color:#a6e22e">createServerRenderer</span>(<span style="color:#a6e22e">params</span> =&gt; {
+    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">providers</span> <span style="color:#f92672">=</span> [
+        { <span style="color:#a6e22e">provide</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">INITIAL_CONFIG</span>, <span style="color:#a6e22e">useValue</span><span style="color:#f92672">:</span> { document<span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;&lt;app&gt;&lt;/app&gt;&#39;</span>, <span style="color:#a6e22e">url</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">params</span>.<span style="color:#a6e22e">url</span> } },
+        { <span style="color:#a6e22e">provide</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">APP_BASE_HREF</span>, <span style="color:#a6e22e">useValue</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">params</span>.<span style="color:#a6e22e">baseUrl</span> },
+        { <span style="color:#a6e22e">provide</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;ORIGIN_URL&#39;</span>, <span style="color:#a6e22e">useValue</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">params</span>.<span style="color:#a6e22e">origin</span> },
+        { <span style="color:#a6e22e">provide</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;BASE_URL&#39;</span>, <span style="color:#a6e22e">useValue</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">params</span>.<span style="color:#a6e22e">origin</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">params</span>.<span style="color:#a6e22e">baseUrl</span> },
+        { <span style="color:#a6e22e">provide</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;API_URL&#39;</span>, <span style="color:#a6e22e">useValue</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">params</span>.<span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">apiUrl</span> },
+        { <span style="color:#a6e22e">provide</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;AUTH_URL&#39;</span>, <span style="color:#a6e22e">useValue</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">params</span>.<span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">authUrl</span> },
+    ];
+
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">platformDynamicServer</span>(<span style="color:#a6e22e">providers</span>).<span style="color:#a6e22e">bootstrapModule</span>(<span style="color:#a6e22e">AppModule</span>).<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">moduleRef</span> =&gt; {
+        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">appRef</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ApplicationRef</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">moduleRef</span>.<span style="color:#a6e22e">injector</span>.<span style="color:#a6e22e">get</span>(<span style="color:#a6e22e">ApplicationRef</span>);
+        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">state</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">moduleRef</span>.<span style="color:#a6e22e">injector</span>.<span style="color:#a6e22e">get</span>(<span style="color:#a6e22e">PlatformState</span>);
+        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">zone</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">moduleRef</span>.<span style="color:#a6e22e">injector</span>.<span style="color:#a6e22e">get</span>(<span style="color:#a6e22e">NgZone</span>);
+
+        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> Promise<span style="color:#f92672">&lt;</span><span style="color:#a6e22e">RenderResult</span><span style="color:#f92672">&gt;</span>((<span style="color:#a6e22e">resolve</span>, <span style="color:#a6e22e">reject</span>) =&gt; {
+            <span style="color:#a6e22e">zone</span>.<span style="color:#a6e22e">onError</span>.<span style="color:#a6e22e">subscribe</span>((<span style="color:#a6e22e">errorInfo</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">any</span>) =&gt; <span style="color:#a6e22e">reject</span>(<span style="color:#a6e22e">errorInfo</span>));
+            <span style="color:#a6e22e">appRef</span>.<span style="color:#a6e22e">isStable</span>.<span style="color:#a6e22e">first</span>(<span style="color:#a6e22e">isStable</span> =&gt; <span style="color:#a6e22e">isStable</span>).<span style="color:#a6e22e">subscribe</span>(() =&gt; {
+                <span style="color:#75715e">// Because &#39;onStable&#39; fires before &#39;onError&#39;, we have to delay slightly before
+</span><span style="color:#75715e"></span>                <span style="color:#75715e">// completing the request in case there&#39;s an error to report
+</span><span style="color:#75715e"></span>                <span style="color:#a6e22e">setImmediate</span>(() =&gt; {
+                    <span style="color:#a6e22e">resolve</span>({
+                        <span style="color:#a6e22e">html</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">renderToString</span>(),
+                        <span style="color:#a6e22e">globals</span><span style="color:#f92672">:</span> { <span style="color:#a6e22e">urlConfig</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">params</span>.<span style="color:#a6e22e">data</span> }
+                    });
+                    <span style="color:#a6e22e">moduleRef</span>.<span style="color:#a6e22e">destroy</span>();
+                });
+            });
+        });
+    });
+});
+</code></pre></div></p>
+
+<p>Now, these settings are taken from window and set up as a provider:</p>
+
+<p><a href="https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ClientApp/ClientApp/app/app.browser.module.ts"><strong>AppClient/AppClient/app/app.browser.module.ts</strong></a>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">NgModule</span>({
+    <span style="color:#a6e22e">bootstrap</span><span style="color:#f92672">:</span> [ <span style="color:#a6e22e">AppComponent</span> ],
+    <span style="color:#a6e22e">imports</span><span style="color:#f92672">:</span> [
+        <span style="color:#a6e22e">BrowserModule</span>,
+        <span style="color:#a6e22e">AppModuleShared</span>
+    ],
+    <span style="color:#a6e22e">providers</span><span style="color:#f92672">:</span> [
+        { <span style="color:#a6e22e">provide</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;ORIGIN_URL&#39;</span>, <span style="color:#a6e22e">useFactory</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">getBaseUrl</span> },
+        { <span style="color:#a6e22e">provide</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;API_URL&#39;</span>, <span style="color:#a6e22e">useFactory</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">apiUrlFactory</span> },
+        { <span style="color:#a6e22e">provide</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;AUTH_URL&#39;</span>, <span style="color:#a6e22e">useFactory</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">authUrlFactory</span> },
+    ]
+})
+<span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">AppModule</span> {
+}
+
+<span style="color:#66d9ef">export</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">getBaseUrl</span>() {
+    <span style="color:#66d9ef">return</span> document.<span style="color:#a6e22e">getElementsByTagName</span>(<span style="color:#e6db74">&#39;base&#39;</span>)[<span style="color:#ae81ff">0</span>].<span style="color:#a6e22e">href</span>;
+}
+
+<span style="color:#66d9ef">export</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">apiUrlFactory</span>() {
+    <span style="color:#66d9ef">return</span> (window <span style="color:#a6e22e">as</span> <span style="color:#a6e22e">any</span>).<span style="color:#a6e22e">urlConfig</span>.<span style="color:#a6e22e">apiUrl</span>;
+}
+
+<span style="color:#66d9ef">export</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">authUrlFactory</span>() {
+    <span style="color:#66d9ef">return</span> (window <span style="color:#a6e22e">as</span> <span style="color:#a6e22e">any</span>).<span style="color:#a6e22e">urlConfig</span>.<span style="color:#a6e22e">authUrl</span>;
+}
+</code></pre></div></p>
+
+<h2 id="setup-the-angular-app-for-oidc">Setup the Angular app for OIDC</h2>
+
+<p>We set up OpenID connect in the Angular with the specification approved library called <strong>angular-auth-oidc-client</strong>. This gives us an easy abstraction to use in our Angular application that implements the validation rules according to the OpenID connect specification.</p>
+
+<p>We install this using:
+<code>npm I --save angular-auth-oidc-client</code></p>
+
+<h3 id="setup-auth-service">Setup Auth Service</h3>
+
+<p>We create a new service called Auth for wrapping the authentication and authorization logic, including the oidc client library. I&rsquo;m following the Angular style guide which puts global singleton services into a folder named “Core”.</p>
+
+<p>We create a new folder named core and create an auth.service.ts file.</p>
+
+<h4 id="configure-oidc-client">Configure OIDC Client</h4>
+
+<p>We configure the OIDC client so it requests the right tokens, scopes, does the right redirects and knows how to locate the endpoints on the authorization server:</p>
+
+<p><a href="https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ClientApp/ClientApp/app/components/core/auth.service.ts"><strong>ClientApp/ClientApp/app/components/core/auth.service.ts</strong></a>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">openIdImplicitFlowConfiguration</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">OpenIDImplicitFlowConfiguration</span>();
+<span style="color:#a6e22e">openIdImplicitFlowConfiguration</span>.<span style="color:#a6e22e">stsServer</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">authUrl</span>,
+<span style="color:#a6e22e">openIdImplicitFlowConfiguration</span>.<span style="color:#a6e22e">redirect_url</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">originUrl</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;callback&#39;</span>,
+<span style="color:#a6e22e">openIdImplicitFlowConfiguration</span>.<span style="color:#a6e22e">client_id</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;spaClient&#39;</span>;
+<span style="color:#a6e22e">openIdImplicitFlowConfiguration</span>.<span style="color:#a6e22e">response_type</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;id_token token&#39;</span>;
+<span style="color:#a6e22e">openIdImplicitFlowConfiguration</span>.<span style="color:#a6e22e">scope</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;openid profile resourceApi&#39;</span>;
+<span style="color:#a6e22e">openIdImplicitFlowConfiguration</span>.<span style="color:#a6e22e">post_logout_redirect_uri</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">originUrl</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;home&#39;</span>;
+<span style="color:#a6e22e">openIdImplicitFlowConfiguration</span>.<span style="color:#a6e22e">forbidden_route</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;/forbidden&#39;</span>;
+<span style="color:#a6e22e">openIdImplicitFlowConfiguration</span>.<span style="color:#a6e22e">unauthorized_route</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;/unauthorized&#39;</span>;
+<span style="color:#a6e22e">openIdImplicitFlowConfiguration</span>.<span style="color:#a6e22e">auto_userinfo</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+<span style="color:#a6e22e">openIdImplicitFlowConfiguration</span>.<span style="color:#a6e22e">log_console_warning_active</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+<span style="color:#a6e22e">openIdImplicitFlowConfiguration</span>.<span style="color:#a6e22e">log_console_debug_active</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+<span style="color:#a6e22e">openIdImplicitFlowConfiguration</span>.<span style="color:#a6e22e">max_id_token_iat_offset_allowed_in_seconds</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>;
+
+<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">authWellKnownEndpoints</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">AuthWellKnownEndpoints</span>();
+<span style="color:#a6e22e">authWellKnownEndpoints</span>.<span style="color:#a6e22e">issuer</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">authUrl</span>;
+  
+<span style="color:#a6e22e">authWellKnownEndpoints</span>.<span style="color:#a6e22e">jwks_uri</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">authUrl</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;/.well-known/openid-configuration/jwks&#39;</span>;
+<span style="color:#a6e22e">authWellKnownEndpoints</span>.<span style="color:#a6e22e">authorization_endpoint</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">authUrl</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;/connect/authorize&#39;</span>;
+<span style="color:#a6e22e">authWellKnownEndpoints</span>.<span style="color:#a6e22e">token_endpoint</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">authUrl</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;/connect/token&#39;</span>;
+<span style="color:#a6e22e">authWellKnownEndpoints</span>.<span style="color:#a6e22e">userinfo_endpoint</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">authUrl</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;/connect/userinfo&#39;</span>;
+<span style="color:#a6e22e">authWellKnownEndpoints</span>.<span style="color:#a6e22e">end_session_endpoint</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">authUrl</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;/connect/endsession&#39;</span>;
+<span style="color:#a6e22e">authWellKnownEndpoints</span>.<span style="color:#a6e22e">check_session_iframe</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">authUrl</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;/connect/checksession&#39;</span>;
+<span style="color:#a6e22e">authWellKnownEndpoints</span>.<span style="color:#a6e22e">revocation_endpoint</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">authUrl</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;/connect/revocation&#39;</span>;
+<span style="color:#a6e22e">authWellKnownEndpoints</span>.<span style="color:#a6e22e">introspection_endpoint</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">authUrl</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;/connect/introspect&#39;</span>;
+<span style="color:#a6e22e">authWellKnownEndpoints</span>.<span style="color:#a6e22e">introspection_endpoint</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">authUrl</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;/connect/introspect&#39;</span>;
+
+<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">oidcSecurityService</span>.<span style="color:#a6e22e">setupModule</span>(<span style="color:#a6e22e">openIdImplicitFlowConfiguration</span>, <span style="color:#a6e22e">authWellKnownEndpoints</span>);
+</code></pre></div></p>
+
+<h4 id="create-http-helpers-for-authorized-requests">Create HTTP helpers for authorized requests</h4>
+
+<p>We create methods for doing HTTP calls that set the Authorization header with the bearer token:</p>
+
+<p><a href="https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ClientApp/ClientApp/app/components/core/auth.service.ts"><strong>ClientApp/ClientApp/app/components/core/auth.service.ts</strong></a>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">get</span>(<span style="color:#a6e22e">url</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">string</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Observable</span><span style="color:#f92672">&lt;</span><span style="color:#a6e22e">any</span><span style="color:#f92672">&gt;</span> {
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">get</span>(<span style="color:#a6e22e">url</span>, { <span style="color:#a6e22e">headers</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">getHeaders</span>() });
+}
+
+<span style="color:#a6e22e">put</span>(<span style="color:#a6e22e">url</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">string</span>, <span style="color:#a6e22e">data</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">any</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Observable</span><span style="color:#f92672">&lt;</span><span style="color:#a6e22e">any</span><span style="color:#f92672">&gt;</span> {
+    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">body</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">stringify</span>(<span style="color:#a6e22e">data</span>);
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">put</span>(<span style="color:#a6e22e">url</span>, <span style="color:#a6e22e">body</span>, { <span style="color:#a6e22e">headers</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">getHeaders</span>() });
+}
+
+<span style="color:#66d9ef">delete</span>(<span style="color:#a6e22e">url</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">string</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Observable</span><span style="color:#f92672">&lt;</span><span style="color:#a6e22e">any</span><span style="color:#f92672">&gt;</span> {
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">http</span>.<span style="color:#66d9ef">delete</span>(<span style="color:#a6e22e">url</span>, { <span style="color:#a6e22e">headers</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">getHeaders</span>() });
+}
+
+<span style="color:#a6e22e">post</span>(<span style="color:#a6e22e">url</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">string</span>, <span style="color:#a6e22e">data</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">any</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Observable</span><span style="color:#f92672">&lt;</span><span style="color:#a6e22e">any</span><span style="color:#f92672">&gt;</span> {
+    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">body</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">stringify</span>(<span style="color:#a6e22e">data</span>);
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">post</span>(<span style="color:#a6e22e">url</span>, <span style="color:#a6e22e">body</span>, { <span style="color:#a6e22e">headers</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">getHeaders</span>() });
+}
+
+<span style="color:#66d9ef">private</span> <span style="color:#a6e22e">getHeaders</span>() {
+    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">headers</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">HttpHeaders</span>();
+    <span style="color:#a6e22e">headers</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">headers</span>.<span style="color:#a6e22e">set</span>(<span style="color:#e6db74">&#39;Content-Type&#39;</span>, <span style="color:#e6db74">&#39;application/json&#39;</span>);
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">appendAuthHeader</span>(<span style="color:#a6e22e">headers</span>);
+}
+
+<span style="color:#66d9ef">private</span> <span style="color:#a6e22e">appendAuthHeader</span>(<span style="color:#a6e22e">headers</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">HttpHeaders</span>) {
+    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">token</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">oidcSecurityService</span>.<span style="color:#a6e22e">getToken</span>();
+
+    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">token</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;&#39;</span>) <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">headers</span>;
+
+    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">tokenValue</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;Bearer &#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">token</span>;
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">headers</span>.<span style="color:#a6e22e">set</span>(<span style="color:#e6db74">&#39;Authorization&#39;</span>, <span style="color:#a6e22e">tokenValue</span>);
+}
+</code></pre></div></p>
+
+<p>We create a login and logout methods:</p>
+
+<p><a href="https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ClientApp/ClientApp/app/components/core/auth.service.ts"><strong>ClientApp/ClientApp/app/components/core/auth.service.ts</strong></a>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">login</span>() {
+    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;start login&#39;</span>);
+    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">oidcSecurityService</span>.<span style="color:#a6e22e">authorize</span>();
+}
+
+<span style="color:#a6e22e">logout</span>() {
+    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;start logoff&#39;</span>);
+    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">oidcSecurityService</span>.<span style="color:#a6e22e">logoff</span>();
+}
+</code></pre></div></p>
+
+<p>These methods are used by the navigation component to login and logout the user.</p>
+
+<h2 id="request-authorized-weather-data">Request authorized weather data</h2>
+
+<p>The weather data is fetched from the Resource API by calling its endpoint with the authService get method:</p>
+
+<p><a href="https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ClientApp/ClientApp/app/components/fetchdata/fetchdata.component.ts"><strong>ClientApp/ClientApp/app/components/fetchdata/fetchdata.component.ts</strong></a>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">ngOnInit</span>()<span style="color:#f92672">:</span> <span style="color:#66d9ef">void</span> {
+    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">authService</span>.<span style="color:#a6e22e">get</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">apiUrl</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;/api/SampleData/WeatherForecasts&#39;</span>).<span style="color:#a6e22e">subscribe</span>(<span style="color:#a6e22e">result</span> =&gt; {
+        <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">forecasts</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">result</span> <span style="color:#a6e22e">as</span> <span style="color:#a6e22e">WeatherForecast</span>[];
+    }, (<span style="color:#a6e22e">error</span>) =&gt; {
+        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">error</span>(<span style="color:#a6e22e">error</span>);
+    });
+}
+</code></pre></div></p>
+
+<h2 id="the-app-structure">The app structure</h2>
+
+<p>We should end up with an app looking like this:</p>
+
+<pre><code>|   boot.browser.ts
+|   boot.server.ts
+|
++---app
+|   |   app.browser.module.ts
+|   |   app.server.module.ts
+|   |   app.shared.module.ts
+|   |
+|   \---components
+|       +---app
+|       |       app.component.css
+|       |       app.component.html
+|       |       app.component.ts
+|       |
+|       +---core
+|       |       auth.service.ts
+|       |
+|       +---counter
+|       |       counter.component.html
+|       |       counter.component.spec.ts
+|       |       counter.component.ts
+|       |
+|       +---fetchdata
+|       |       fetchdata.component.html
+|       |       fetchdata.component.ts
+|       |
+|       +---home
+|       |       home.component.html
+|       |       home.component.ts
+|       |
+|       +---navmenu
+|       |       navmenu.component.css
+|       |       navmenu.component.html
+|       |       navmenu.component.ts
+|       |
+|       \---unauthorized
+|               unauthorized.component.html
+|               unauthorized.component.ts
+</code></pre>
+
+<h1 id="running-the-app">Running the app</h1>
+
+<p>As usual we can select the AuthorizationServer, AppClient and ResourceApi and make them run together. From here we can click login, register a user, login, give consent and get access to the authorized weather forecast data from ResourceAPI:</p>
+
+<p><img src="/images/openid-connect/oidc-with-angular.gif" alt="OpenID connect with Angular recording" /></p>
+
+<h1 id="conclusion">Conclusion</h1>
+
+<p>In this part, we got our system setup with an Angular client using an implicit flow OpenID connect client. We updated to Angular 5 and used an Angular library, called angular-auth-oidc-client, approved by the OpenID connect standard for easily plugging the Angular app into the OpenID connect setup. This made the Angular app able to authenticate and be authorized to request an authorized resource on the resource API.</p>
+
+<p>This is concluding the OpenID connect with Angular series. I hope you learned a lot and it gave you a grasp of the different variations of the OpenID connect implementation, including the different flow types, scopes and hands-on implementations of this. OpenID connect is extremely relevant today as it is the most common standard for authentication and authorization, implemented in almost all big companies in one variation or another.
+You really got an advantage knowing this stuff now on a practical level as many people talk about this in vague terms because they don’t really know what’s going on under the helmet. You do know now; no more buzzword bingo!</p>
+
+                </section>
+            </article>
+
+            
+
+            
+                
+                    <div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = 'blog-christianlydemann-com'; 
+
+     
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+                
+            
+
+            
+
+            <footer id="footer">
+    
+        <div id="social">
+
+	
+	
+    <a class="symbol" href="https://github.com/lydemann">
+        <i class="fa fa-github-square"></i>
+    </a>
+    
+
+
+</div>
+
+    
+    <p class="small">
+    
+       © Copyright 2018 <i class="fa fa-heart" aria-hidden="true"></i> Christian Lüdemann&#39;s blog
+    
+    </p>
+    <p class="small">
+    </p>
+</footer>
+
+        </section>
+
+        <script src="https://blog.christianlydemann.com/js/jquery-2.2.4.min.js"></script>
+<script src="https://blog.christianlydemann.com/js/main.js"></script>
+<script src="https://blog.christianlydemann.com/js/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+  
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-54304486-2', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+
+
+    </body>
+</html>

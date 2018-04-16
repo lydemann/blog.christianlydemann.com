@@ -21,13 +21,13 @@ The basic idea is that we register an in memory client and api resource on the A
 
 This series is learning you OpenID connect with Angular with these parts:
 
-- **[Part 1: Creating an OpenID connect system with Angular 5 and IdentityServer4]({{< relref "openid-connect-part1-openid-connect-overview.md" >}})**
-- **[Part 2: Creating identity server setup with client credential authentication]({{< relref "openid-connect-part2-client-credentials.md" >}})** (this)
-- **[Part 3: Creating interactive authentication with an authorization code client]({{< relref "openid-connect-part3-authorization-code-flow.md" >}})**
-- **[Part 4: OpenID Connect Hybrid Flow for calling resource API]({{< relref "openid-connect-part4-hybrid-flow.md" >}})**
-- **Part 5: OpenID Connect with ASP.NET Identity (coming soon)**
-- **Part 6: OpenID Connect with Entity Framework for IdentityServer configuration (coming soon)**
-- **Part 7: OpenID Connect with Angular client (coming soon)**
+- [Part 1: Creating an OpenID connect system with Angular 5 and IdentityServer4]({{< relref "openid-connect-part1-openid-connect-overview.md" >}})
+- [Part 2: Creating identity server setup with client credential authentication]({{< relref "openid-connect-part2-client-credentials.md" >}}) (this)
+- [Part 3: Creating interactive authentication with an authorization code client]({{< relref "openid-connect-part3-authorization-code-flow.md" >}})
+- [Part 4: OpenID Connect Hybrid Flow for calling resource API]({{< relref "openid-connect-part4-hybrid-flow.md" >}})
+- [Part 5: OpenID Connect with ASP.NET Identity]({{< relref "openid-connect-part5-identity.md" >}})
+- [Part 6: OpenID Connect with Entity Framework for IdentityServer configuration]({{< relref "openid-connect-part6-ef-identityserver-config.md" >}})
+- [Part 7: OpenID Connect with Angular client]({{< relref "openid-connect-part7-angular5.md" >}})
 
 **## Authorization server**
 

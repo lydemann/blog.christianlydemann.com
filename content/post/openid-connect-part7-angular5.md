@@ -1,18 +1,29 @@
 ---
 title: "OpenID Connect with Angular 5 (OIDC Part 7)"
 date: 2018-04-12T21:54:58+02:00
-draft: true
+draft: false
 ---
 
-Now we are getting somewhere, huh!? So far we have played around with the authorization code, hybrid and client credentials flow clients to get a grasp of when to use what. We have made the authorization server interactive and dynamic by saving user data and IdentityServer data in the database.
+Now we are getting somewhere, huh!? So far we have played around with the authorization code, hybrid and client credentials flow to get a grasp of when to use what. We have made the authorization server interactive and dynamic by saving user data and IdentityServer data in the database.
 
-In this part, we are gonna implement the Angular app on the client app to use an implicit flow client for authenticating and calling an authorized endpoint on the resource API. As spoken about in the first part, we are using implicit flow here because we are using an Angular app, which runs in the browser and can’t keep a client secret that is needed if we wanted to use authorization code in exchange for a refresh token
+In this part, we are gonna implement the Angular app on the client app to use an implicit flow client for authenticating and calling an authorized endpoint on the resource API. As spoken about in the first part, we are using implicit flow here because we are using an Angular app, which runs in the browser and can’t keep a client secret that is needed if we wanted to use authorization code.
 
 In the first part, I wrote about the security concerns of Implicit flow and how to mitigate them, and Angular is beneficial for this purpose in the following ways:
 
-- Build in XSS protection (if not doing manual dom manipulation, which is an Angular anti-pattern anyway).
-- Official OpenID connect approved implementations of the OIDC standard for the client according to the specification. It is more error-prone to implement the OpenID connect standard ourselves, with stuff like token validation, implementing validation rules etc.
+- Built in XSS protection (if not doing manual dom manipulation, which is an Angular anti-pattern anyway).
+- Official OpenID connect approved implementations of the specification. It is more error-prone to implement the OpenID connect standard ourselves, with stuff like token validation, implementing validation rules etc.
 
+# The OpenID connect with IdentityServer4 and Angular series
+
+This series is learning you OpenID connect with Angular in these parts:
+
+- [Part 1: Creating an OpenID connect system with Angular 5 and IdentityServer4]({{< relref "openid-connect-part1-openid-connect-overview.md" >}})
+- [Part 2: Creating identity server setup with client credential authentication]({{< relref "openid-connect-part2-client-credentials.md" >}})
+- [Part 3: Creating interactive authentication with an authorization code client]({{< relref "openid-connect-part3-authorization-code-flow.md" >}})
+- [Part 4: OpenID Connect Hybrid Flow for calling resource API]({{< relref "openid-connect-part4-hybrid-flow.md" >}})
+- [Part 5: OpenID Connect with ASP.NET Identity]({{< relref "openid-connect-part5-identity.md" >}})
+- [Part 6: OpenID Connect with Entity Framework for IdentityServer configuration]({{< relref "openid-connect-part6-ef-identityserver-config.md" >}})
+- [Part 7: OpenID Connect with Angular client]({{< relref "openid-connect-part7-angular5.md" >}}) (this)
 
 # AuthorizationServer
 
@@ -47,13 +58,80 @@ Here we are creating a client for single page applications (SPAs) like Angular. 
 
 Remember, in the previous part we set up dynamic configuration with Entity Framework, containing a seed method reading this Config.cs file for populating the database if not already populated. If your database is already populated from the previous part, remember to delete it to get it seeded with this new client.
 
+# Resource API
+Setup an authorized controller with a method providing weather data to the client application.
+
+[**ResourceApi/Controllers/SampleDataController.cs**](https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ResourceApi/Controllers/SampleDataController.cs)
+
+{{< highlight csharp>}}
+[Route("api/[controller]")]
+[Authorize]
+public class SampleDataController : Controller
+{
+   private static string[] Summaries = new[]
+   {
+       "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+   };
+
+   [HttpGet("WeatherForecasts")]
+   public IEnumerable<WeatherForecast> WeatherForecasts()
+   {
+       var rng = new Random();
+       return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+       {
+           DateFormatted = DateTime.Now.AddDays(index).ToString("d"),
+           TemperatureC = rng.Next(-20, 55),
+           Summary = Summaries[rng.Next(Summaries.Length)]
+       });
+   }
+
+   public class WeatherForecast
+   {
+       public string DateFormatted { get; set; }
+       public int TemperatureC { get; set; }
+       public string Summary { get; set; }
+
+       public int TemperatureF
+       {
+           get
+           {
+               return 32 + (int)(TemperatureC / 0.5556);
+           }
+       }
+   }
+}
+{{< /highlight >}}
+
+This controller is created by simply copying the existing weather endpoint from the app client and adding the authorized attribute.
+
+## Configure Startup.cs for a browser client
+
+The client app is doing a cross origin request when requesting the resource API, so we need to enable CORS in Startup.cs with the CORS middleware:
+
+[**ResourceApi/Startup.cs**](https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ResourceApi/Startup.cs)
+{{< highlight csharp>}}
+services.AddCors(options =>
+{
+    options.AddPolicy("default", policy =>
+    {
+        policy.WithOrigins(Configuration["clientUrl"])
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+{{< /highlight >}}
+
+Now we are ready to connect our app to this endpoint.
+
 # ClientApp
+
+For the client app we need to first update to Angular 5 and hereafter create an app showing weather data by calling the authorized endpoint on the resource API.
 
 ## Setup Angular app with Angular 5
 
-ASP.NET Core has built-in support for Angular apps. In part 2 we scaffolded ClientApp as an ASP.NET application with Angular setting it up with Angular 4. Angular 4 is so last week, so we are going to upgrade that to Angular 5, but we need to change a few things:
+ASP.NET Core has built-in support for Angular apps. In part 2 we scaffolded ClientApp as an ASP.NET application with Angular, setting it up with Angular 4. Angular 4 is so last week, so we are going to upgrade that to Angular 5, but we need to change a few things:
 
-- The node_modules should be removed and be reinstalled with all @angular packages being updated to Angular 5 and use at least rxjs version 5.5*
+- The node_modules should be removed and be reinstalled with all @angular packages being updated to Angular 5 and use at least rxjs version 5.5*.
 - Update Webpack to use the AngularCompilerPlugin instead of the now deprecated AotPlugin. After this update, the vendor and app bundles should be rebuild and replace the old ones.
 
 ### Update to Angular 5
@@ -129,7 +207,7 @@ What has changed here is we have installed the Angular 5 libraries and updated d
 
 ### Update webpack to use AngularCompilerPlugin
 
-In Angular 5 ahead of time compilation is default, so the Webpack config file should use AngularCompilerPlugin instead of AotPlugin:
+In Angular 5, ahead of time compilation is default, so the Webpack config file should use AngularCompilerPlugin instead of AotPlugin:
 
 [**ClientApp/webpack.config.js**](https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ClientApp/webpack.config.js)
 {{< highlight javascript>}}
@@ -144,9 +222,9 @@ After this we delete the "ClientApp/wwwroot/dist" folder and rebuild it by openi
 
 ## Inject AppSettings into the Angular app:
 
-Doing server-side rendering enables us to inject environment variables into the Angular app at runtime instead of needed a separate build for each environment (the Angular CLI way).
+Doing server-side rendering enables us to inject environment variables into the Angular app at runtime instead of needing a separate build for each environment (the Angular CLI way).
 
-This way the server and client can also share the same configuration values without duplication.
+This way the server and client can also share the same configuration values.
 We setup the environment variables in the AppSettings.json file like this:
 
 [**ClientApp/AppSettings.json**](https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ClientApp/appsettings.json)
@@ -165,31 +243,31 @@ We setup the environment variables in the AppSettings.json file like this:
 I like type safety, so I use a little trick, where I map the configuration to a typed configuration class and register it in the ASP.NET Core IoC:
 
 {{< highlight csharp >}}
-            var appSettings = new AppSettings();
-            Configuration.Bind(appSettings);
-            services.AddSingleton(appSettings);
+var appSettings = new AppSettings();
+Configuration.Bind(appSettings);
+services.AddSingleton(appSettings);
 {{< /highlight >}}
 
 Now the app settings can be injected and used as a view model in the Index view:
 
 {{< highlight csharp >}}
-        public AppSettings AppSettings { get; }
+public AppSettings AppSettings { get; }
 
-        public HomeController(AppSettings appSettings)
-        {
-            AppSettings = appSettings;
-        }
+public HomeController(AppSettings appSettings)
+{
+    AppSettings = appSettings;
+}
 
-        public IActionResult Index()
-        {
-            return View(AppSettings);
-        }
-{{ /csharp }}
+public IActionResult Index()
+{
+    return View(AppSettings);
+}
+{{< /highlight >}}
 
 
 The app settings get passed through the index view model into the view and injected into the Angular app by setting it as the prerender data:
 
-[ClientApp/Views/Home/Index.cshtml](https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ClientApp/Views/Home/Index.cshtml)
+[**ClientApp/Views/Home/Index.cshtml**](https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ClientApp/Views/Home/Index.cshtml)
 {{< highlight html>}}
 <app asp-prerender-module="ClientApp/dist/main-server"
     asp-prerender-data='new {
@@ -272,9 +350,9 @@ export function authUrlFactory() {
 We set up OpenID connect in the Angular with the specification approved library called **angular-auth-oidc-client**. This gives us an easy abstraction to use in our Angular application that implements the validation rules according to the OpenID connect specification.
 
 We install this using:
-``npm I angular-auth-oidc-client``
+``npm I --save angular-auth-oidc-client``
 
-### Setup Auth service
+### Setup Auth Service
 
 We create a new service called Auth for wrapping the authentication and authorization logic, including the oidc client library. I'm following the Angular style guide which puts global singleton services into a folder named “Core”.
 
@@ -321,55 +399,57 @@ this.oidcSecurityService.setupModule(openIdImplicitFlowConfiguration, authWellKn
 We create methods for doing HTTP calls that set the Authorization header with the bearer token:
 
 [**ClientApp/ClientApp/app/components/core/auth.service.ts**](https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ClientApp/ClientApp/app/components/core/auth.service.ts)
-{{ highlight javascript }}
-    get(url: string): Observable<any> {
-        return this.http.get(url, { headers: this.getHeaders() });
-    }
+{{< highlight javascript >}}
+get(url: string): Observable<any> {
+    return this.http.get(url, { headers: this.getHeaders() });
+}
 
-    put(url: string, data: any): Observable<any> {
-        const body = JSON.stringify(data);
-        return this.http.put(url, body, { headers: this.getHeaders() });
-    }
+put(url: string, data: any): Observable<any> {
+    const body = JSON.stringify(data);
+    return this.http.put(url, body, { headers: this.getHeaders() });
+}
 
-    delete(url: string): Observable<any> {
-        return this.http.delete(url, { headers: this.getHeaders() });
-    }
+delete(url: string): Observable<any> {
+    return this.http.delete(url, { headers: this.getHeaders() });
+}
 
-    post(url: string, data: any): Observable<any> {
-        const body = JSON.stringify(data);
-        return this.http.post(url, body, { headers: this.getHeaders() });
-    }
+post(url: string, data: any): Observable<any> {
+    const body = JSON.stringify(data);
+    return this.http.post(url, body, { headers: this.getHeaders() });
+}
 
-    private getHeaders() {
-        let headers = new HttpHeaders();
-        headers = headers.set('Content-Type', 'application/json');
-        return this.appendAuthHeader(headers);
-    }
+private getHeaders() {
+    let headers = new HttpHeaders();
+    headers = headers.set('Content-Type', 'application/json');
+    return this.appendAuthHeader(headers);
+}
 
-    private appendAuthHeader(headers: HttpHeaders) {
-        const token = this.oidcSecurityService.getToken();
+private appendAuthHeader(headers: HttpHeaders) {
+    const token = this.oidcSecurityService.getToken();
 
-        if (token === '') return headers;
+    if (token === '') return headers;
 
-        const tokenValue = 'Bearer ' + token;
-        return headers.set('Authorization', tokenValue);
-    }
+    const tokenValue = 'Bearer ' + token;
+    return headers.set('Authorization', tokenValue);
+}
 {{< /highlight >}}
 
 We create a login and logout methods:
 
 [**ClientApp/ClientApp/app/components/core/auth.service.ts**](https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ClientApp/ClientApp/app/components/core/auth.service.ts)
 {{< highlight javascript >}}
-    login() {
-        console.log('start login');
-        this.oidcSecurityService.authorize();
-    }
+login() {
+    console.log('start login');
+    this.oidcSecurityService.authorize();
+}
 
-    logout() {
-        console.log('start logoff');
-        this.oidcSecurityService.logoff();
-    }
+logout() {
+    console.log('start logoff');
+    this.oidcSecurityService.logoff();
+}
 {{< /highlight >}}
+
+These methods are used by the navigation component to login and logout the user.
 
 ## Request authorized weather data
 
@@ -377,85 +457,71 @@ The weather data is fetched from the Resource API by calling its endpoint with t
 
 [**ClientApp/ClientApp/app/components/fetchdata/fetchdata.component.ts**](https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ClientApp/ClientApp/app/components/fetchdata/fetchdata.component.ts)
 {{< highlight javascript >}}
-    ngOnInit(): void {
-        this.authService.get(this.apiUrl + '/api/SampleData/WeatherForecasts').subscribe(result => {
-            this.forecasts = result as WeatherForecast[];
-        }, (error) => {
-            console.error(error);
-        });
-    }
-{{ /highlight }}
-
-# Resource API
-Setup an authorized controller with a method providing weather data.
-
-[**ResourceApi/Controllers/SampleDataController.cs**](https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ResourceApi/Controllers/SampleDataController.cs)
-
-{{< highlight csharp>}}
-[Route("api/[controller]")]
-[Authorize]
-public class SampleDataController : Controller
-{
-   private static string[] Summaries = new[]
-   {
-       "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-   };
-
-   [HttpGet("WeatherForecasts")]
-   public IEnumerable<WeatherForecast> WeatherForecasts()
-   {
-       var rng = new Random();
-       return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-       {
-           DateFormatted = DateTime.Now.AddDays(index).ToString("d"),
-           TemperatureC = rng.Next(-20, 55),
-           Summary = Summaries[rng.Next(Summaries.Length)]
-       });
-   }
-
-   public class WeatherForecast
-   {
-       public string DateFormatted { get; set; }
-       public int TemperatureC { get; set; }
-       public string Summary { get; set; }
-
-       public int TemperatureF
-       {
-           get
-           {
-               return 32 + (int)(TemperatureC / 0.5556);
-           }
-       }
-   }
+ngOnInit(): void {
+    this.authService.get(this.apiUrl + '/api/SampleData/WeatherForecasts').subscribe(result => {
+        this.forecasts = result as WeatherForecast[];
+    }, (error) => {
+        console.error(error);
+    });
 }
 {{< /highlight >}}
 
-## Configure Startup.cs for a browser client
+## The app structure
 
-Enable CORS for the ClientApp in Startup.cs with CORS middleware:
+We should end up with an app looking like this:
 
-[**ResourceApi/Startup.cs**](https://github.com/lydemann/oidc-angular-identityserver/blob/master/Solution%206%20-%20OIDC%20and%20Angular%20client/ResourceApi/Startup.cs)
-{{< highlight csharp>}}
-           services.AddCors(options =>
-           {
-               options.AddPolicy("default", policy =>
-               {
-                   policy.WithOrigins(Configuration["clientUrl"])
-                       .AllowAnyHeader()
-                       .AllowAnyMethod();
-               });
-           });
+```
+|   boot.browser.ts
+|   boot.server.ts
+|
++---app
+|   |   app.browser.module.ts
+|   |   app.server.module.ts
+|   |   app.shared.module.ts
+|   |
+|   \---components
+|       +---app
+|       |       app.component.css
+|       |       app.component.html
+|       |       app.component.ts
+|       |
+|       +---core
+|       |       auth.service.ts
+|       |
+|       +---counter
+|       |       counter.component.html
+|       |       counter.component.spec.ts
+|       |       counter.component.ts
+|       |
+|       +---fetchdata
+|       |       fetchdata.component.html
+|       |       fetchdata.component.ts
+|       |
+|       +---home
+|       |       home.component.html
+|       |       home.component.ts
+|       |
+|       +---navmenu
+|       |       navmenu.component.css
+|       |       navmenu.component.html
+|       |       navmenu.component.ts
+|       |
+|       \---unauthorized
+|               unauthorized.component.html
+|               unauthorized.component.ts
+```
 
-{{< /highlight >}}
 
 # Running the app
+
+As usual we can select the AuthorizationServer, AppClient and ResourceApi and make them run together. From here we can click login, register a user, login, give consent and get access to the authorized weather forecast data from ResourceAPI:
 
 ![OpenID connect with Angular recording](/images/openid-connect/oidc-with-angular.gif)
 
 # Conclusion
 
-In this part, we got our system setup with an Angular client using an implicit flow OpenID connect client. We used an Angular library approved by the OpenID connect standard for easily plugging the Angular app into the OpenID connect setup. This made the Angular app able to authenticate and be authorized to request an authorized resource on the resource API.
+In this part, we got our system setup with an Angular client using an implicit flow OpenID connect client. We updated to Angular 5 and used an Angular library, called angular-auth-oidc-client, approved by the OpenID connect standard for easily plugging the Angular app into the OpenID connect setup. This made the Angular app able to authenticate and be authorized to request an authorized resource on the resource API.
 
-This is concluding the OpenID connect with Angular series. I hope you learned a lot and it gave you a grasp of the different variations of the OpenID connect implementation, including the different flow types, scopes and hands-on implementations of this. OpenID connect is extremely relevant today as it is the most common standard for auth, implemented in almost all big companies in one variation or another.
-You really got an advantage knowing this stuff now on a practical level as many people talk about this in vague terms because they don’t really know what’s going on under the helmet. You do now; no more buzzword bingo!
+This is concluding the OpenID connect with Angular series. I hope you learned a lot and it gave you a grasp of the different variations of the OpenID connect implementation, including the different flow types, scopes and hands-on implementations of this. OpenID connect is extremely relevant today as it is the most common standard for authentication and authorization, implemented in almost all big companies in one variation or another.
+You really got an advantage knowing this stuff now on a practical level as many people talk about this in vague terms because they don’t really know what’s going on under the helmet. You do know now; no more buzzword bingo!
 

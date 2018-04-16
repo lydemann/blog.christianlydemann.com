@@ -1,5 +1,5 @@
 ---
-title: "Configure IdentityServer with Entity Framework ( OIDC Part 6)"
+title: "Configure IdentityServer with Entity Framework (OIDC Part 6)"
 date: 2018-04-11T19:00:15+02:00
 draft: false
 ---
@@ -17,7 +17,7 @@ This series is learning you OpenID connect with Angular in these parts:
 - [Part 4: OpenID Connect Hybrid Flow for calling resource API]({{< relref "openid-connect-part4-hybrid-flow.md" >}})
 - [Part 5: OpenID Connect with ASP.NET Identity]({{< relref "openid-connect-part5-identity.md" >}})
 - [Part 6: OpenID Connect with Entity Framework for IdentityServer configuration]({{< relref "openid-connect-part6-ef-identityserver-config.md" >}}) (this)
-- **Part 7: OpenID Connect with Angular client (coming soon)**
+- [Part 7: OpenID Connect with Angular client]({{< relref "openid-connect-part7-angular5.md" >}})
 
 ## AuthorizationServer - Setup IdentityServer configuration management with Entity Framework
 

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650" role="img" aria-labelledby="title desc">
+  <title id="title">How a React Native app fits together</title>
+  <desc id="desc">Architecture illustration showing TypeScript and React components flowing through the React Native renderer to iOS and Android, with navigation, offline sync, secure storage, lifecycle and native capabilities around it.</desc>
+  <defs>
+    <linearGradient id="bg3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f8fbff"/><stop offset="1" stop-color="#f4fbf8"/></linearGradient>
+    <linearGradient id="core" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2563eb"/><stop offset="1" stop-color="#0891b2"/></linearGradient>
+    <filter id="s3" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="11" flood-color="#0f172a" flood-opacity="0.12"/></filter>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#64748b"/></marker>
+  </defs>
+  <rect width="1200" height="650" rx="34" fill="url(#bg3)"/>
+  <text x="600" y="56" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="34" font-weight="800" fill="#0f172a">How a React Native app fits together</text>
+  <text x="600" y="86" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="18" fill="#64748b">Your TypeScript becomes real native UI, but mobile concerns surround the render tree.</text>
+
+  <g filter="url(#s3)" font-family="Inter,Arial,sans-serif">
+    <rect x="428" y="126" width="344" height="72" rx="20" fill="#0f172a"/><text x="600" y="169" text-anchor="middle" font-size="22" font-weight="800" fill="#fff">Your TypeScript</text>
+    <rect x="428" y="228" width="344" height="82" rx="22" fill="#2563eb"/><text x="600" y="261" text-anchor="middle" font-size="21" font-weight="800" fill="#fff">React components + hooks</text><text x="600" y="286" text-anchor="middle" font-size="15" fill="#dbeafe">props · state · events · effects</text>
+    <rect x="428" y="342" width="344" height="82" rx="22" fill="url(#core)"/><text x="600" y="376" text-anchor="middle" font-size="21" font-weight="800" fill="#fff">React Native renderer</text><text x="600" y="401" text-anchor="middle" font-size="15" fill="#cffafe">Fabric · TurboModules · Codegen</text>
+    <rect x="428" y="458" width="344" height="120" rx="22" fill="#fff"/>
+  </g>
+  <line x1="600" y1="199" x2="600" y2="224" stroke="#64748b" stroke-width="3" marker-end="url(#arr)"/>
+  <line x1="600" y1="311" x2="600" y2="338" stroke="#64748b" stroke-width="3" marker-end="url(#arr)"/>
+  <line x1="600" y1="425" x2="600" y2="454" stroke="#64748b" stroke-width="3" marker-end="url(#arr)"/>
+
+  <g font-family="Inter,Arial,sans-serif">
+    <rect x="466" y="484" width="124" height="70" rx="18" fill="#e0f2fe"/><text x="528" y="516" text-anchor="middle" font-size="20" font-weight="800" fill="#0f172a">iOS</text><text x="528" y="539" text-anchor="middle" font-size="14" fill="#475569">native UI</text>
+    <rect x="610" y="484" width="124" height="70" rx="18" fill="#dcfce7"/><text x="672" y="516" text-anchor="middle" font-size="19" font-weight="800" fill="#0f172a">Android</text><text x="672" y="539" text-anchor="middle" font-size="14" fill="#475569">native UI</text>
+
+    <g filter="url(#s3)">
+      <rect x="70" y="150" width="270" height="94" rx="22" fill="#fff"/><rect x="70" y="270" width="270" height="94" rx="22" fill="#fff"/><rect x="70" y="390" width="270" height="94" rx="22" fill="#fff"/>
+      <rect x="860" y="150" width="270" height="94" rx="22" fill="#fff"/><rect x="860" y="270" width="270" height="94" rx="22" fill="#fff"/><rect x="860" y="390" width="270" height="94" rx="22" fill="#fff"/>
+    </g>
+    <circle cx="110" cy="190" r="20" fill="#ede9fe"/><text x="110" y="197" text-anchor="middle" font-size="19">↗</text><text x="145" y="184" font-size="19" font-weight="800" fill="#0f172a">Navigation</text><text x="145" y="209" font-size="15" fill="#64748b">stacks · tabs · deep links</text>
+    <circle cx="110" cy="310" r="20" fill="#dcfce7"/><text x="110" y="317" text-anchor="middle" font-size="18">↻</text><text x="145" y="304" font-size="19" font-weight="800" fill="#0f172a">Offline + sync</text><text x="145" y="329" font-size="15" fill="#64748b">persist · queue · retry</text>
+    <circle cx="110" cy="430" r="20" fill="#ffedd5"/><text x="110" y="437" text-anchor="middle" font-size="17">◆</text><text x="145" y="424" font-size="19" font-weight="800" fill="#0f172a">Secure storage</text><text x="145" y="449" font-size="15" fill="#64748b">Keychain / Keystore</text>
+
+    <circle cx="900" cy="190" r="20" fill="#cffafe"/><text x="900" y="197" text-anchor="middle" font-size="18">◷</text><text x="935" y="184" font-size="19" font-weight="800" fill="#0f172a">App lifecycle</text><text x="935" y="209" font-size="15" fill="#64748b">active · background</text>
+    <circle cx="900" cy="310" r="20" fill="#fce7f3"/><text x="900" y="317" text-anchor="middle" font-size="17">⌁</text><text x="935" y="304" font-size="19" font-weight="800" fill="#0f172a">Native capabilities</text><text x="935" y="329" font-size="15" fill="#64748b">camera · GPS · Bluetooth</text>
+    <circle cx="900" cy="430" r="20" fill="#e2e8f0"/><text x="900" y="437" text-anchor="middle" font-size="17">⚙</text><text x="935" y="424" font-size="19" font-weight="800" fill="#0f172a">Platform differences</text><text x="935" y="449" font-size="15" fill="#64748b">iOS and Android differ</text>
+  </g>
+
+  <g stroke="#cbd5e1" stroke-width="2" fill="none">
+    <path d="M340 197 C385 197 395 246 425 246"/><path d="M340 317 C390 317 395 373 425 373"/><path d="M340 437 C388 437 395 400 425 400"/>
+    <path d="M860 197 C815 197 805 246 775 246"/><path d="M860 317 C812 317 805 373 775 373"/><path d="M860 437 C812 437 805 400 775 400"/>
+  </g>
+  <rect x="300" y="604" width="600" height="30" rx="15" fill="#e0f2fe"/>
+  <text x="600" y="625" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="16" font-weight="700" fill="#075985">One codebase, real native apps — plus the realities of a mobile runtime.</text>
+</svg>
